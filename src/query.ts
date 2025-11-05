@@ -3,10 +3,19 @@ type IReference = {
   build(): string;
 };
 
+type IColumnReference<TTable, TColumn> = IReference & {
+  table: TTable;
+  column: TColumn;
+};
+
+type ILiteralReference = IReference & {
+  value: string;
+};
+
 /** Predicado que puede ser negado, o envuelto en paréntesis */
 type IPredicate = {
-  isNegated: boolean;
-  isWrapped: boolean;
+  isNegated?: boolean;
+  isWrapped?: boolean;
   build(): string;
 };
 
@@ -18,10 +27,15 @@ type IComparisonPredicate = IPredicate & {
 };
 
 /** Predicado que compara 2 predicados mediante operadores "o" u "y" */
-type ILogicalPredicate = IPredicate & {
+type IBooleanPredicate = IPredicate & {
   left: IPredicate;
   operator: "OR" | "AND";
   right: IPredicate;
+};
+
+type INegatedPredicate = IPredicate & {
+  predicate: IPredicate;
+  isNegated: true;
 };
 
 export function createQuery<TTables extends Record<string, unknown>>() {
@@ -31,11 +45,10 @@ export function createQuery<TTables extends Record<string, unknown>>() {
     readonly alias: string;
   };
 
-  type TColumnReference<TableName extends keyof TTables> = IReference & {
-    readonly table: TableName;
-    readonly column: keyof TTables[TableName];
-    // as(alias: string): TAliasedColumnReference<TableName>;
-  };
+  type TColumnReference<TableName extends keyof TTables> = IColumnReference<
+    TableName,
+    keyof TTables[TableName]
+  > & {};
 
   const getColumn = <TTable extends keyof TTables>(
     table: TTable,
@@ -63,14 +76,7 @@ export function createQuery<TTables extends Record<string, unknown>>() {
   };
 
   const selectList: IReference[] = [];
-  const select = (...columns: IReference[]) => {
-    selectList.push(...columns);
-  };
-
   let mainTable: keyof TTables;
-  const from = (table: keyof TTables) => {
-    mainTable = table;
-  };
 
   const compare = (
     left: IReference,
@@ -81,8 +87,8 @@ export function createQuery<TTables extends Record<string, unknown>>() {
       left: left,
       operator: operator,
       right: right,
-      isNegated: false,
-      isWrapped: false,
+      // isNegated: false,
+      // isWrapped: false,
       build() {
         return `${this.left.build()} ${this.operator} ${this.right.build()}`;
       },
@@ -90,26 +96,67 @@ export function createQuery<TTables extends Record<string, unknown>>() {
   };
 
   const joinedTables: { table: keyof TTables; predicate: IPredicate }[] = [];
-  const join = (table: keyof TTables, condition: IPredicate) => {
-    joinedTables.push({ table: table, predicate: condition });
-  };
 
   const context = {
     getColumn: getColumn,
-    select: select,
-    from: from,
-    join: join,
+    select(...columns: IReference[]) {
+      selectList.push(...columns);
+      return this;
+    },
+    from(table: keyof TTables) {
+      mainTable = table;
+      return this;
+    },
+    join(table: keyof TTables, condition: IPredicate) {
+      joinedTables.push({ table: table, predicate: condition });
+      return this;
+    },
     compare: compare,
-    not: (predicate: IPredicate): IPredicate => {
+    and: (left: IPredicate, right: IPredicate): IBooleanPredicate => {
       return {
-        ...predicate,
+        left: left,
+        right: right,
+        // isNegated: false,
+        // isWrapped: false,
+        operator: "AND",
+        build() {
+          return `${this.left.build()} ${this.operator} ${this.right.build()}`;
+        },
+      };
+    },
+    or: (left: IPredicate, right: IPredicate): IBooleanPredicate => {
+      return {
+        left: left,
+        right: right,
+        // isNegated: false,
+        // isWrapped: false,
+        operator: "OR",
+        build() {
+          return `${this.left.build()} ${this.operator} ${this.right.build()}`;
+        },
+      };
+    },
+    not: (predicate: IPredicate): INegatedPredicate => {
+      return {
+        predicate: predicate,
         isNegated: true,
+        build() {
+          return `NOT ${this.predicate.build()}`;
+        },
       };
     },
     wrap: (predicate: IPredicate): IPredicate => {
       return {
         ...predicate,
         isWrapped: true,
+      };
+    },
+    literal(value: string): ILiteralReference {
+      return {
+        value: value,
+        build() {
+          return value;
+        },
       };
     },
   };
