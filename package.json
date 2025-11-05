@@ -1,0 +1,27 @@
+{
+  "name": "qb",
+  "version": "1.0.0",
+  "description": "a Typescript Node.js library that helps developers in building queries for MSSQL",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest --detectOpenHandles"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chris-f23/qb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chris-f23/qb/issues"
+  },
+  "homepage": "https://github.com/chris-f23/qb#readme",
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.4",
+    "typescript": "^5.9.3"
+  }
+}
