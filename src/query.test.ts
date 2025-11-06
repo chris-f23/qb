@@ -77,7 +77,7 @@ describe("Query", () => {
           ctx.getColumn("personAddress", "street")
         )
         .from("person")
-        .join("personAddress", ctx.and(isSamePerson, isFromBrazil));
+        .join("personAddress", isSamePerson.and(isFromBrazil));
     });
 
     expect(query.getDefinition()).toMatchObject({
@@ -117,15 +117,14 @@ describe("Query", () => {
         .getColumn("person", "id")
         .isEqualTo(ctx.getColumn("personAddress", "personId"));
 
-      const isFromBrazil = ctx
-        .getColumn("personAddress", "country")
-        .isEqualTo(ctx.literal("Brazil"));
-
       const isFromSpain = ctx
         .getColumn("personAddress", "country")
         .isEqualTo(ctx.literal("Spain"));
 
-      const isFromBrazilOrSpain = ctx.or(isFromBrazil, isFromSpain);
+      const isFromBrazilOrSpain = ctx
+        .getColumn("personAddress", "country")
+        .isEqualTo(ctx.literal("Brazil"))
+        .or(isFromSpain);
 
       ctx
         .select(
@@ -137,7 +136,7 @@ describe("Query", () => {
           ctx.getColumn("personAddress", "street")
         )
         .from("person")
-        .join("personAddress", ctx.and(isSamePerson, isFromBrazilOrSpain));
+        .join("personAddress", isSamePerson.and(isFromBrazilOrSpain));
     });
 
     expect(query.getDefinition()).toMatchObject({
@@ -185,11 +184,10 @@ describe("Query", () => {
         .getColumn("person", "id")
         .isEqualTo(ctx.getColumn("personAddress", "personId"));
 
-      const isNotFromFrance = ctx.not(
-        ctx
-          .getColumn("personAddress", "country")
-          .isEqualTo(ctx.literal("France"))
-      );
+      const isNotFromFrance = ctx
+        .getColumn("personAddress", "country")
+        .isEqualTo(ctx.literal("France"))
+        .not();
 
       ctx
         .select(
@@ -201,7 +199,7 @@ describe("Query", () => {
           ctx.getColumn("personAddress", "street")
         )
         .from("person")
-        .join("personAddress", ctx.and(isSamePerson, isNotFromFrance));
+        .join("personAddress", isSamePerson.and(isNotFromFrance));
     });
 
     expect(query.getDefinition()).toMatchObject({

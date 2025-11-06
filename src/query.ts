@@ -26,6 +26,10 @@ type IComparisonPredicate = IPredicate & {
   left: IReference;
   operator: "=" | ">" | "<" | "<=" | ">=" | "<>";
   right: IReference;
+
+  and(other: IPredicate): IBooleanPredicate;
+  or(other: IPredicate): IBooleanPredicate;
+  not(): INegatedPredicate;
 };
 
 /** Predicado que compara 2 predicados mediante operadores "o" u "y" */
@@ -82,6 +86,43 @@ const createComparisonPredicate = (
     build() {
       return `${this.left.build()} ${this.operator} ${this.right.build()}`;
     },
+
+    and(other: IComparisonPredicate): IBooleanPredicate {
+      return createBooleanPredicate(this, "AND", other);
+    },
+
+    or(other: IComparisonPredicate): IBooleanPredicate {
+      return createBooleanPredicate(this, "OR", other);
+    },
+
+    not(): INegatedPredicate {
+      return createNegatedPredicate(this);
+    },
+  };
+};
+
+const createBooleanPredicate = (
+  left: IPredicate,
+  operator: IBooleanPredicate["operator"],
+  right: IPredicate
+): IBooleanPredicate => {
+  return {
+    left: left,
+    operator: operator,
+    right: right,
+    build() {
+      return `${this.left.build()} ${this.operator} ${this.right.build()}`;
+    },
+  };
+};
+
+const createNegatedPredicate = (predicate: IPredicate): INegatedPredicate => {
+  return {
+    predicate: predicate,
+    operator: "NOT",
+    build() {
+      return `${this.operator} ${this.predicate.build()}`;
+    },
   };
 };
 
@@ -127,39 +168,6 @@ export function createQuery<TTables extends Record<string, unknown>>() {
     },
     // compare: createComparisonPredicate,
 
-    and: (left: IPredicate, right: IPredicate): IBooleanPredicate => {
-      return {
-        left: left,
-        right: right,
-        // isNegated: false,
-        // isWrapped: false,
-        operator: "AND",
-        build() {
-          return `${this.left.build()} ${this.operator} ${this.right.build()}`;
-        },
-      };
-    },
-    or: (left: IPredicate, right: IPredicate): IBooleanPredicate => {
-      return {
-        left: left,
-        right: right,
-        // isNegated: false,
-        // isWrapped: false,
-        operator: "OR",
-        build() {
-          return `${this.left.build()} ${this.operator} ${this.right.build()}`;
-        },
-      };
-    },
-    not: (predicate: IPredicate): INegatedPredicate => {
-      return {
-        operator: "NOT",
-        predicate: predicate,
-        build() {
-          return `NOT ${this.predicate.build()}`;
-        },
-      };
-    },
     wrap: (predicate: IPredicate): IPredicate => {
       return {
         ...predicate,
