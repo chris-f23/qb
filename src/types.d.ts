@@ -3,6 +3,11 @@ type IReference = {
   build(): string;
 
   isEqualTo(other: IReference): IComparisonPredicate;
+  isNotEqualTo(other: IReference): IComparisonPredicate;
+  isGreaterThan(other: IReference): IComparisonPredicate;
+  isGreaterThanOrEqualTo(other: IReference): IComparisonPredicate;
+  isLessThan(other: IReference): IComparisonPredicate;
+  isLessThanOrEqualTo(other: IReference): IComparisonPredicate;
 };
 
 type IColumnReference<TTable, TColumn> = IReference & {

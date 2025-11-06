@@ -9,5 +9,20 @@ export const createLiteralReference = (value: string): ILiteralReference => {
     isEqualTo(other: IReference): IComparisonPredicate {
       return createComparisonPredicate(this, "=", other);
     },
+    isNotEqualTo(other: IReference): IComparisonPredicate {
+      return createComparisonPredicate(this, "<>", other);
+    },
+    isGreaterThan(other: IReference): IComparisonPredicate {
+      return createComparisonPredicate(this, ">", other);
+    },
+    isGreaterThanOrEqualTo(other: IReference): IComparisonPredicate {
+      return createComparisonPredicate(this, ">=", other);
+    },
+    isLessThan(other: IReference): IComparisonPredicate {
+      return createComparisonPredicate(this, "<", other);
+    },
+    isLessThanOrEqualTo(other: IReference): IComparisonPredicate {
+      return createComparisonPredicate(this, "<=", other);
+    },
   };
 };
