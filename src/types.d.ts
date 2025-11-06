@@ -58,6 +58,7 @@ type IQuery<TTables extends Record<string, unknown>> = {
 
 type ISelectQuery<TTables extends Record<string, unknown>> = IQuery<TTables> & {
   selectList: IReference[];
+  selectMode?: "DISTINCT";
   mainTable: keyof TTables | undefined;
   joinedTables:
     | {
@@ -85,17 +86,31 @@ type IQueryContext<TTables extends Record<string, unknown>> = {
 
 type ISelectQueryContext<TTables extends Record<string, unknown>> =
   IQueryContext<TTables> & {
+    /** SELECT [ALL] */
     select(...columns: IReference[]): ISelectQueryContext<TTables>;
+
+    /** SELECT DISTINCT */
+    selectDistinct(...columns: IReference[]): ISelectQueryContext<TTables>;
+
+    /** FROM ... */
     from(table: string): ISelectQueryContext<TTables>;
+
+    /** JOIN ... ON ... */
     join(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
+
+    /** LEFT JOIN ... ON ... */
     leftJoin(
       table: string,
       condition: IPredicate
     ): ISelectQueryContext<TTables>;
+
+    /** RIGHT JOIN ... ON ... */
     rightJoin(
       table: string,
       condition: IPredicate
     ): ISelectQueryContext<TTables>;
+
+    /** WHERE ... */
     where(condition: IPredicate): ISelectQueryContext<TTables>;
     getQuery(): ISelectQuery<TTables>;
   };

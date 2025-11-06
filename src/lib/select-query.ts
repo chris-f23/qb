@@ -3,7 +3,7 @@ import { createLiteralReference } from "./literal-reference";
 
 export const createSelectQuery = <TTables extends Record<string, unknown>>(
   defineCallback: (ctx: ISelectQueryContext<TTables>) => void
-) => {
+): ISelectQuery<TTables> => {
   const ctx = createSelectQueryContext();
   defineCallback(ctx);
   return ctx.getQuery();
@@ -13,6 +13,7 @@ const createSelectQueryContext = <
   TTables extends Record<string, unknown>
 >(): ISelectQueryContext<TTables> => {
   const selectList: IReference[] = [];
+  let selectMode: ISelectQuery<TTables>["selectMode"];
   let mainTable: keyof TTables;
   const joinedTables: {
     table: keyof TTables;
@@ -34,6 +35,12 @@ const createSelectQueryContext = <
   return {
     select(...columns: IReference[]) {
       selectList.push(...columns);
+      return this;
+    },
+
+    selectDistinct(...columns) {
+      selectList.push(...columns);
+      selectMode = "DISTINCT";
       return this;
     },
 
@@ -64,13 +71,14 @@ const createSelectQueryContext = <
 
     getColumn: getColumn,
 
-    literal(value: string) {
+    literal(value) {
       return createLiteralReference(value);
     },
 
     getQuery(): ISelectQuery<TTables> {
       return {
         selectList: selectList,
+        selectMode: selectMode,
         mainTable: mainTable,
         joinedTables: joinedTables,
         searchCondition: searchCondition,

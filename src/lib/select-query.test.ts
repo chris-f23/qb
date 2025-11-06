@@ -219,7 +219,7 @@ describe("Select Query", () => {
     });
   });
 
-  test("SELECT id, country FROM person JOIN personAddress ON id = personId AND NOT country = 'France", () => {
+  test("SELECT id, country FROM person JOIN personAddress ON id = personId AND NOT country = 'France'", () => {
     const query = createSelectQuery<QueryTables>((ctx) => {
       const isSamePerson = ctx
         .getColumn("person", "id")
@@ -269,7 +269,7 @@ describe("Select Query", () => {
     });
   });
 
-  test("SELECT id, country FROM person JOIN personAddress ON id = personId AND country <> 'France", () => {
+  test("SELECT id, country FROM person JOIN personAddress ON id = personId AND country <> 'France'", () => {
     const query = createSelectQuery<QueryTables>((ctx) => {
       const isSamePerson = ctx
         .getColumn("person", "id")
@@ -382,6 +382,30 @@ describe("Select Query", () => {
       searchCondition: {
         left: { table: "personAddress", column: "personId" },
         operator: "IS NULL",
+      },
+    });
+  });
+
+  test("SELECT DISTINCT city FROM personAddress WHERE country <> 'Mexico'", () => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
+      ctx
+        .selectDistinct(ctx.getColumn("personAddress", "city"))
+        .from("personAddress")
+        .where(
+          ctx
+            .getColumn("personAddress", "country")
+            .isNotEqualTo(ctx.literal("Mexico"))
+        );
+    });
+
+    expect(query).toMatchObject({
+      selectMode: "DISTINCT",
+      selectList: [{ table: "personAddress", column: "city" }],
+      mainTable: "personAddress",
+      searchCondition: {
+        left: { table: "personAddress", column: "country" },
+        operator: "<>",
+        right: { value: "Mexico" },
       },
     });
   });
