@@ -17,11 +17,9 @@ type QueryTables = {
 describe("Query", () => {
   test("Debe definir una query de tipo 'select-from-join'", () => {
     const query = createQuery<QueryTables>().as((ctx) => {
-      const isSamePerson = ctx.compare(
-        ctx.getColumn("person", "id"),
-        "=",
-        ctx.getColumn("personAddress", "personId")
-      );
+      const isSamePerson = ctx
+        .getColumn("person", "id")
+        .isEqualTo(ctx.getColumn("personAddress", "personId"));
 
       ctx
         .select(
@@ -61,17 +59,13 @@ describe("Query", () => {
 
   test("Define una query con condicion lógica AND", () => {
     const query = createQuery<QueryTables>().as((ctx) => {
-      const isSamePerson = ctx.compare(
-        ctx.getColumn("person", "id"),
-        "=",
-        ctx.getColumn("personAddress", "personId")
-      );
+      const isSamePerson = ctx
+        .getColumn("person", "id")
+        .isEqualTo(ctx.getColumn("personAddress", "personId"));
 
-      const isFromBrazil = ctx.compare(
-        ctx.getColumn("personAddress", "country"),
-        "=",
-        ctx.literal("Brazil")
-      );
+      const isFromBrazil = ctx
+        .getColumn("personAddress", "country")
+        .isEqualTo(ctx.literal("Brazil"));
 
       ctx
         .select(
@@ -119,23 +113,17 @@ describe("Query", () => {
 
   test("Define una query con condicion lógica OR", () => {
     const query = createQuery<QueryTables>().as((ctx) => {
-      const isSamePerson = ctx.compare(
-        ctx.getColumn("person", "id"),
-        "=",
-        ctx.getColumn("personAddress", "personId")
-      );
+      const isSamePerson = ctx
+        .getColumn("person", "id")
+        .isEqualTo(ctx.getColumn("personAddress", "personId"));
 
-      const isFromBrazil = ctx.compare(
-        ctx.getColumn("personAddress", "country"),
-        "=",
-        ctx.literal("Brazil")
-      );
+      const isFromBrazil = ctx
+        .getColumn("personAddress", "country")
+        .isEqualTo(ctx.literal("Brazil"));
 
-      const isFromSpain = ctx.compare(
-        ctx.getColumn("personAddress", "country"),
-        "=",
-        ctx.literal("Spain")
-      );
+      const isFromSpain = ctx
+        .getColumn("personAddress", "country")
+        .isEqualTo(ctx.literal("Spain"));
 
       const isFromBrazilOrSpain = ctx.or(isFromBrazil, isFromSpain);
 
@@ -193,18 +181,14 @@ describe("Query", () => {
 
   test("Define una query con condicion lógica NOT", () => {
     const query = createQuery<QueryTables>().as((ctx) => {
-      const isSamePerson = ctx.compare(
-        ctx.getColumn("person", "id"),
-        "=",
-        ctx.getColumn("personAddress", "personId")
-      );
+      const isSamePerson = ctx
+        .getColumn("person", "id")
+        .isEqualTo(ctx.getColumn("personAddress", "personId"));
 
       const isNotFromFrance = ctx.not(
-        ctx.compare(
-          ctx.getColumn("personAddress", "country"),
-          "=",
-          ctx.literal("France")
-        )
+        ctx
+          .getColumn("personAddress", "country")
+          .isEqualTo(ctx.literal("France"))
       );
 
       ctx
@@ -246,7 +230,7 @@ describe("Query", () => {
                 operator: "=",
                 right: { value: "France" },
               },
-              isNegated: true,
+              operator: "NOT",
             },
           },
         },

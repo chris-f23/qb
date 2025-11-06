@@ -1,6 +1,8 @@
 /** Referencia a cualquier valor dentro de la consulta */
 type IReference = {
   build(): string;
+
+  isEqualTo(other: IReference): IComparisonPredicate;
 };
 
 type IColumnReference<TTable, TColumn> = IReference & {
@@ -14,7 +16,7 @@ type ILiteralReference = IReference & {
 
 /** Predicado que puede ser negado, o envuelto en paréntesis */
 type IPredicate = {
-  isNegated?: boolean;
+  operator: string;
   isWrapped?: boolean;
   build(): string;
 };
@@ -22,7 +24,7 @@ type IPredicate = {
 /** Predicado que compara 2 referencias mediante operadores de tipo "es igual a", "es menor a", "es mayor o igual a", etc */
 type IComparisonPredicate = IPredicate & {
   left: IReference;
-  operator: "=" | ">" | "<" | "<=" | ">=";
+  operator: "=" | ">" | "<" | "<=" | ">=" | "<>";
   right: IReference;
 };
 
@@ -35,8 +37,57 @@ type IBooleanPredicate = IPredicate & {
 
 type INegatedPredicate = IPredicate & {
   predicate: IPredicate;
-  isNegated: true;
+  operator: "NOT";
 };
+
+const createColumnReference = <TTable, TColumn>(
+  table: TTable,
+  column: TColumn
+): IColumnReference<TTable, TColumn> => {
+  return {
+    table: table,
+    column: column,
+    build() {
+      return `${this.table}.${this.column}`;
+    },
+    isEqualTo(other: IReference): IComparisonPredicate {
+      return createComparisonPredicate(this, "=", other);
+    },
+  };
+};
+
+const createLiteralReference = (value: string): ILiteralReference => {
+  return {
+    value: value,
+    build() {
+      return this.value;
+    },
+    isEqualTo(other: IReference): IComparisonPredicate {
+      return createComparisonPredicate(this, "=", other);
+    },
+  };
+};
+
+const createComparisonPredicate = (
+  left: IReference,
+  operator: IComparisonPredicate["operator"],
+  right: IReference
+): IComparisonPredicate => {
+  return {
+    left: left,
+    operator: operator,
+    right: right,
+    // isNegated: false,
+    // isWrapped: false,
+    build() {
+      return `${this.left.build()} ${this.operator} ${this.right.build()}`;
+    },
+  };
+};
+
+// export function defineQuery<TTables extends Record<string, unknown>>() {
+
+// }
 
 export function createQuery<TTables extends Record<string, unknown>>() {
   type TAliasedColumnReference<TableName extends keyof TTables> = IReference & {
@@ -45,55 +96,18 @@ export function createQuery<TTables extends Record<string, unknown>>() {
     readonly alias: string;
   };
 
-  type TColumnReference<TableName extends keyof TTables> = IColumnReference<
-    TableName,
-    keyof TTables[TableName]
-  > & {};
-
-  const getColumn = <TTable extends keyof TTables>(
+  const getColumn = <
+    TTable extends keyof TTables,
+    TColumn extends keyof TTables[TTable]
+  >(
     table: TTable,
-    column: keyof TTables[TTable]
-  ): TColumnReference<TTable> => {
-    return {
-      table: table,
-      column: column,
-      build() {
-        return `${this.table.toString()}.${this.column.toString()}`;
-      },
-      // as(alias: string) {
-      //   return {
-      //     table: this.table,
-      //     column: this.column,
-      //     alias: alias,
-      //     build() {
-      //       return `${this.table.toString()}.${this.column.toString()} AS ${
-      //         this.alias
-      //       }`;
-      //     },
-      //   };
-      // },
-    };
+    column: TColumn
+  ): IColumnReference<TTable, TColumn> => {
+    return createColumnReference(table, column);
   };
 
   const selectList: IReference[] = [];
   let mainTable: keyof TTables;
-
-  const compare = (
-    left: IReference,
-    operator: IComparisonPredicate["operator"],
-    right: IReference
-  ): IComparisonPredicate => {
-    return {
-      left: left,
-      operator: operator,
-      right: right,
-      // isNegated: false,
-      // isWrapped: false,
-      build() {
-        return `${this.left.build()} ${this.operator} ${this.right.build()}`;
-      },
-    };
-  };
 
   const joinedTables: { table: keyof TTables; predicate: IPredicate }[] = [];
 
@@ -111,7 +125,8 @@ export function createQuery<TTables extends Record<string, unknown>>() {
       joinedTables.push({ table: table, predicate: condition });
       return this;
     },
-    compare: compare,
+    // compare: createComparisonPredicate,
+
     and: (left: IPredicate, right: IPredicate): IBooleanPredicate => {
       return {
         left: left,
@@ -138,8 +153,8 @@ export function createQuery<TTables extends Record<string, unknown>>() {
     },
     not: (predicate: IPredicate): INegatedPredicate => {
       return {
+        operator: "NOT",
         predicate: predicate,
-        isNegated: true,
         build() {
           return `NOT ${this.predicate.build()}`;
         },
@@ -152,12 +167,7 @@ export function createQuery<TTables extends Record<string, unknown>>() {
       };
     },
     literal(value: string): ILiteralReference {
-      return {
-        value: value,
-        build() {
-          return value;
-        },
-      };
+      return createLiteralReference(value);
     },
   };
 
