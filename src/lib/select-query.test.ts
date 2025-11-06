@@ -15,7 +15,66 @@ type QueryTables = {
 };
 
 describe("Select Query", () => {
-  test("Debe definir una query de tipo 'select-from-join'", () => {
+  test("SELECT 1", () => {
+    const query = createSelectQuery((ctx) => {
+      ctx.select(ctx.literal(1));
+    });
+
+    expect(query).toMatchObject({ selectList: [{ value: 1 }] });
+  });
+
+  test("SELECT id FROM person", () => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
+      ctx.select(ctx.getColumn("person", "id")).from("person");
+    });
+    expect(query).toMatchObject({
+      selectList: [{ table: "person", column: "id" }],
+      mainTable: "person",
+    });
+  });
+
+  test("SELECT name, id FROM person", () => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
+      const [personId, personName] = [
+        ctx.getColumn("person", "id"),
+        ctx.getColumn("person", "name"),
+      ];
+      ctx.select(personId, personName).from("person");
+    });
+
+    expect(query).toMatchObject({
+      selectList: [
+        { table: "person", column: "id" },
+        { table: "person", column: "name" },
+      ],
+      mainTable: "person",
+    });
+  });
+
+  test("SELECT name FROM person WHERE id = 1", () => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
+      const [personId, personName] = [
+        ctx.getColumn("person", "id"),
+        ctx.getColumn("person", "name"),
+      ];
+      ctx
+        .select(personName)
+        .from("person")
+        .where(personId.isEqualTo(ctx.literal(1)));
+    });
+
+    expect(query).toMatchObject({
+      selectList: [{ table: "person", column: "name" }],
+      mainTable: "person",
+      searchCondition: {
+        left: { table: "person", column: "id" },
+        operator: "=",
+        right: { value: 1 },
+      },
+    });
+  });
+
+  test("SELECT id, name, age, country, city, street FROM person JOIN personAddress ON id = personId", () => {
     const query = createSelectQuery<QueryTables>((ctx) => {
       const isSamePerson = ctx
         .getColumn("person", "id")
@@ -57,25 +116,19 @@ describe("Select Query", () => {
     });
   });
 
-  test("Define una query con condicion lógica AND", () => {
+  test("SELECT id, street FROM person JOIN personAddress ON id = personId AND country = 'Brazil'", () => {
     const query = createSelectQuery<QueryTables>((ctx) => {
-      const isSamePerson = ctx
-        .getColumn("person", "id")
-        .isEqualTo(ctx.getColumn("personAddress", "personId"));
+      const personId = ctx.getColumn("person", "id");
+      const isSamePerson = personId.isEqualTo(
+        ctx.getColumn("personAddress", "personId")
+      );
 
       const isFromBrazil = ctx
         .getColumn("personAddress", "country")
         .isEqualTo(ctx.literal("Brazil"));
 
       ctx
-        .select(
-          ctx.getColumn("person", "id"),
-          ctx.getColumn("person", "name"),
-          ctx.getColumn("person", "age"),
-          ctx.getColumn("personAddress", "country"),
-          ctx.getColumn("personAddress", "city"),
-          ctx.getColumn("personAddress", "street")
-        )
+        .select(personId, ctx.getColumn("personAddress", "street"))
         .from("person")
         .join("personAddress", isSamePerson.and(isFromBrazil));
     });
@@ -83,10 +136,6 @@ describe("Select Query", () => {
     expect(query).toMatchObject({
       selectList: [
         { table: "person", column: "id" },
-        { table: "person", column: "name" },
-        { table: "person", column: "age" },
-        { table: "personAddress", column: "country" },
-        { table: "personAddress", column: "city" },
         { table: "personAddress", column: "street" },
       ],
       mainTable: "person",
@@ -111,7 +160,7 @@ describe("Select Query", () => {
     });
   });
 
-  test("Define una query con condicion lógica OR", () => {
+  test("SELECT id, city FROM person JOIN personAddress ON id = personId AND (country = 'Brazil' OR country = 'Spain')", () => {
     const query = createSelectQuery<QueryTables>((ctx) => {
       const isSamePerson = ctx
         .getColumn("person", "id")
@@ -129,11 +178,7 @@ describe("Select Query", () => {
       ctx
         .select(
           ctx.getColumn("person", "id"),
-          ctx.getColumn("person", "name"),
-          ctx.getColumn("person", "age"),
-          ctx.getColumn("personAddress", "country"),
-          ctx.getColumn("personAddress", "city"),
-          ctx.getColumn("personAddress", "street")
+          ctx.getColumn("personAddress", "city")
         )
         .from("person")
         .join("personAddress", isSamePerson.and(isFromBrazilOrSpain));
@@ -142,11 +187,7 @@ describe("Select Query", () => {
     expect(query).toMatchObject({
       selectList: [
         { table: "person", column: "id" },
-        { table: "person", column: "name" },
-        { table: "person", column: "age" },
-        { table: "personAddress", column: "country" },
         { table: "personAddress", column: "city" },
-        { table: "personAddress", column: "street" },
       ],
       mainTable: "person",
       joinedTables: [
@@ -178,7 +219,7 @@ describe("Select Query", () => {
     });
   });
 
-  test("Define una query con condicion lógica NOT", () => {
+  test("SELECT id, country FROM person JOIN personAddress ON id = personId AND NOT country = 'France", () => {
     const query = createSelectQuery<QueryTables>((ctx) => {
       const isSamePerson = ctx
         .getColumn("person", "id")
@@ -192,11 +233,7 @@ describe("Select Query", () => {
       ctx
         .select(
           ctx.getColumn("person", "id"),
-          ctx.getColumn("person", "name"),
-          ctx.getColumn("person", "age"),
-          ctx.getColumn("personAddress", "country"),
-          ctx.getColumn("personAddress", "city"),
-          ctx.getColumn("personAddress", "street")
+          ctx.getColumn("personAddress", "country")
         )
         .from("person")
         .join("personAddress", isSamePerson.and(isNotFromFrance));
@@ -205,11 +242,7 @@ describe("Select Query", () => {
     expect(query).toMatchObject({
       selectList: [
         { table: "person", column: "id" },
-        { table: "person", column: "name" },
-        { table: "person", column: "age" },
         { table: "personAddress", column: "country" },
-        { table: "personAddress", column: "city" },
-        { table: "personAddress", column: "street" },
       ],
       mainTable: "person",
       joinedTables: [
@@ -229,6 +262,52 @@ describe("Select Query", () => {
                 right: { value: "France" },
               },
               operator: "NOT",
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  test("SELECT id, country FROM person JOIN personAddress ON id = personId AND country <> 'France", () => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
+      const isSamePerson = ctx
+        .getColumn("person", "id")
+        .isEqualTo(ctx.getColumn("personAddress", "personId"));
+
+      const isNotFromFrance = ctx
+        .getColumn("personAddress", "country")
+        .isNotEqualTo(ctx.literal("France"));
+
+      ctx
+        .select(
+          ctx.getColumn("person", "id"),
+          ctx.getColumn("personAddress", "country")
+        )
+        .from("person")
+        .join("personAddress", isSamePerson.and(isNotFromFrance));
+    });
+
+    expect(query).toMatchObject({
+      selectList: [
+        { table: "person", column: "id" },
+        { table: "personAddress", column: "country" },
+      ],
+      mainTable: "person",
+      joinedTables: [
+        {
+          table: "personAddress",
+          predicate: {
+            left: {
+              left: { table: "person", column: "id" },
+              operator: "=",
+              right: { table: "personAddress", column: "personId" },
+            },
+            operator: "AND",
+            right: {
+              left: { table: "personAddress", column: "country" },
+              operator: "<>",
+              right: { value: "France" },
             },
           },
         },

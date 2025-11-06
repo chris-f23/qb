@@ -16,7 +16,7 @@ type IColumnReference<TTable, TColumn> = IReference & {
 };
 
 type ILiteralReference = IReference & {
-  value: string;
+  value: ILiteralValue;
 };
 
 /** Predicado que puede ser negado, o envuelto en paréntesis */
@@ -55,10 +55,13 @@ type IQuery<TTables extends Record<string, unknown>> = {
 
 type ISelectQuery<TTables extends Record<string, unknown>> = IQuery<TTables> & {
   selectList: IReference[];
-  mainTable: keyof TTables;
-  joinedTables: { table: keyof TTables; predicate: IPredicate }[];
+  mainTable: keyof TTables | undefined;
+  joinedTables: { table: keyof TTables; predicate: IPredicate }[] | undefined;
+  searchCondition: IPredicate | undefined;
   // TODO: WHERE...
 };
+
+type ILiteralValue = string | number | boolean;
 
 type IQueryContext<TTables extends Record<string, unknown>> = {
   getColumn<
@@ -68,7 +71,7 @@ type IQueryContext<TTables extends Record<string, unknown>> = {
     table: TTable,
     column: TColumn
   ): IColumnReference<TTable, TColumn>;
-  literal(value: string): ILiteralReference;
+  literal(value: ILiteralValue): ILiteralReference;
 };
 
 type ISelectQueryContext<TTables extends Record<string, unknown>> =
@@ -76,5 +79,6 @@ type ISelectQueryContext<TTables extends Record<string, unknown>> =
     select(...columns: IReference[]): ISelectQueryContext;
     from(table: string): ISelectQueryContext<TTables>;
     join(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
+    where(condition: IPredicate): ISelectQueryContext<TTables>;
     getQuery(): ISelectQuery<TTables>;
   };

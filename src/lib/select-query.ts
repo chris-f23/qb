@@ -15,6 +15,7 @@ const createSelectQueryContext = <
   const selectList: IReference[] = [];
   let mainTable: keyof TTables;
   const joinedTables: { table: keyof TTables; predicate: IPredicate }[] = [];
+  let searchCondition: IPredicate;
 
   const getColumn = <
     TTable extends keyof TTables,
@@ -40,6 +41,11 @@ const createSelectQueryContext = <
       return this;
     },
 
+    where(condition) {
+      searchCondition = condition;
+      return this;
+    },
+
     getColumn: getColumn,
 
     literal(value: string) {
@@ -51,6 +57,7 @@ const createSelectQueryContext = <
         selectList: selectList,
         mainTable: mainTable,
         joinedTables: joinedTables,
+        searchCondition: searchCondition,
         build() {
           return "wip";
         },
