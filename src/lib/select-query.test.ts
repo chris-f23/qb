@@ -1,5 +1,5 @@
 import { describe, test, expect } from "@jest/globals";
-import { createQuery } from "./query";
+import { createSelectQuery } from "./select-query";
 
 type PersonTable = { id: string; name: string; age: number };
 type PersonAddressTable = {
@@ -14,9 +14,9 @@ type QueryTables = {
   personAddress: PersonAddressTable;
 };
 
-describe("Query", () => {
+describe("Select Query", () => {
   test("Debe definir una query de tipo 'select-from-join'", () => {
-    const query = createQuery<QueryTables>().as((ctx) => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
       const isSamePerson = ctx
         .getColumn("person", "id")
         .isEqualTo(ctx.getColumn("personAddress", "personId"));
@@ -34,7 +34,7 @@ describe("Query", () => {
         .join("personAddress", isSamePerson);
     });
 
-    expect(query.getDefinition()).toMatchObject({
+    expect(query).toMatchObject({
       selectList: [
         { table: "person", column: "id" },
         { table: "person", column: "name" },
@@ -58,7 +58,7 @@ describe("Query", () => {
   });
 
   test("Define una query con condicion lógica AND", () => {
-    const query = createQuery<QueryTables>().as((ctx) => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
       const isSamePerson = ctx
         .getColumn("person", "id")
         .isEqualTo(ctx.getColumn("personAddress", "personId"));
@@ -80,7 +80,7 @@ describe("Query", () => {
         .join("personAddress", isSamePerson.and(isFromBrazil));
     });
 
-    expect(query.getDefinition()).toMatchObject({
+    expect(query).toMatchObject({
       selectList: [
         { table: "person", column: "id" },
         { table: "person", column: "name" },
@@ -112,7 +112,7 @@ describe("Query", () => {
   });
 
   test("Define una query con condicion lógica OR", () => {
-    const query = createQuery<QueryTables>().as((ctx) => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
       const isSamePerson = ctx
         .getColumn("person", "id")
         .isEqualTo(ctx.getColumn("personAddress", "personId"));
@@ -139,7 +139,7 @@ describe("Query", () => {
         .join("personAddress", isSamePerson.and(isFromBrazilOrSpain));
     });
 
-    expect(query.getDefinition()).toMatchObject({
+    expect(query).toMatchObject({
       selectList: [
         { table: "person", column: "id" },
         { table: "person", column: "name" },
@@ -179,7 +179,7 @@ describe("Query", () => {
   });
 
   test("Define una query con condicion lógica NOT", () => {
-    const query = createQuery<QueryTables>().as((ctx) => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
       const isSamePerson = ctx
         .getColumn("person", "id")
         .isEqualTo(ctx.getColumn("personAddress", "personId"));
@@ -202,7 +202,7 @@ describe("Query", () => {
         .join("personAddress", isSamePerson.and(isNotFromFrance));
     });
 
-    expect(query.getDefinition()).toMatchObject({
+    expect(query).toMatchObject({
       selectList: [
         { table: "person", column: "id" },
         { table: "person", column: "name" },

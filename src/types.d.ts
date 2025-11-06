@@ -48,3 +48,33 @@ type INegatedPredicate = IPredicate & {
   predicate: IPredicate;
   operator: "NOT";
 };
+
+type IQuery<TTables extends Record<string, unknown>> = {
+  build(): string;
+};
+
+type ISelectQuery<TTables extends Record<string, unknown>> = IQuery<TTables> & {
+  selectList: IReference[];
+  mainTable: keyof TTables;
+  joinedTables: { table: keyof TTables; predicate: IPredicate }[];
+  // TODO: WHERE...
+};
+
+type IQueryContext<TTables extends Record<string, unknown>> = {
+  getColumn<
+    TTable extends keyof TTables,
+    TColumn extends keyof TTables[TTable]
+  >(
+    table: TTable,
+    column: TColumn
+  ): IColumnReference<TTable, TColumn>;
+  literal(value: string): ILiteralReference;
+};
+
+type ISelectQueryContext<TTables extends Record<string, unknown>> =
+  IQueryContext<TTables> & {
+    select(...columns: IReference[]): ISelectQueryContext;
+    from(table: string): ISelectQueryContext<TTables>;
+    join(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
+    getQuery(): ISelectQuery<TTables>;
+  };
