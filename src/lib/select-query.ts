@@ -1,4 +1,5 @@
 import { createColumnReference } from "./column-reference";
+import { createCountReference } from "./count-reference";
 import { createLiteralReference } from "./literal-reference";
 
 export const createSelectQuery = <TTables extends Record<string, unknown>>(
@@ -12,7 +13,7 @@ export const createSelectQuery = <TTables extends Record<string, unknown>>(
 const createSelectQueryContext = <
   TTables extends Record<string, unknown>
 >(): ISelectQueryContext<TTables> => {
-  const selectList: IReference[] = [];
+  const selectList: ISelectableReference[] = [];
   let selectMode: ISelectQuery<TTables>["selectMode"];
   let mainTable: keyof TTables;
   const joinedTables: {
@@ -33,12 +34,12 @@ const createSelectQueryContext = <
   };
 
   return {
-    select(...columns: IReference[]) {
+    select(...columns: ISelectableReference[]) {
       selectList.push(...columns);
       return this;
     },
 
-    selectDistinct(...columns) {
+    selectDistinct(...columns: ISelectableReference[]) {
       selectList.push(...columns);
       selectMode = "DISTINCT";
       return this;
@@ -70,6 +71,14 @@ const createSelectQueryContext = <
     },
 
     getColumn: getColumn,
+
+    count(reference) {
+      return createCountReference(reference, false);
+    },
+
+    countDistinct(reference) {
+      return createCountReference(reference, true);
+    },
 
     literal(value) {
       return createLiteralReference(value);

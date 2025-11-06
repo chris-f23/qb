@@ -409,4 +409,43 @@ describe("Select Query", () => {
       },
     });
   });
+
+  test("SELECT COUNT(1) FROM person", () => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
+      ctx.select(ctx.count(ctx.literal(1))).from("person");
+    });
+
+    expect(query).toMatchObject({
+      selectList: [
+        {
+          originalReference: {
+            value: 1,
+          },
+          asDistinct: false,
+        },
+      ],
+      mainTable: "person",
+    });
+  });
+
+  test("SELECT COUNT(DISTINCT name) FROM person", () => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
+      ctx
+        .select(ctx.countDistinct(ctx.getColumn("person", "name")))
+        .from("person");
+    });
+
+    expect(query).toMatchObject({
+      selectList: [
+        {
+          originalReference: {
+            table: "person",
+            column: "name",
+          },
+          asDistinct: true,
+        },
+      ],
+      mainTable: "person",
+    });
+  });
 });

@@ -13,6 +13,12 @@ type IReference = {
   isNotNull(): IComparisonPredicate;
 };
 
+type ICountReference = {
+  asDistinct: boolean;
+  originalReference: IReference;
+  build(): string;
+};
+
 type IColumnReference<TTable, TColumn> = IReference & {
   table: TTable;
   column: TColumn;
@@ -20,6 +26,10 @@ type IColumnReference<TTable, TColumn> = IReference & {
 
 type ILiteralReference = IReference & {
   value: ILiteralValue;
+};
+
+type ISelectableReference = {
+  build(): string;
 };
 
 /** Predicado que puede ser negado, o envuelto en paréntesis */
@@ -57,7 +67,7 @@ type IQuery<TTables extends Record<string, unknown>> = {
 };
 
 type ISelectQuery<TTables extends Record<string, unknown>> = IQuery<TTables> & {
-  selectList: IReference[];
+  selectList: ISelectableReference[];
   selectMode?: "DISTINCT";
   mainTable: keyof TTables | undefined;
   joinedTables:
@@ -87,10 +97,12 @@ type IQueryContext<TTables extends Record<string, unknown>> = {
 type ISelectQueryContext<TTables extends Record<string, unknown>> =
   IQueryContext<TTables> & {
     /** SELECT [ALL] */
-    select(...columns: IReference[]): ISelectQueryContext<TTables>;
+    select(...columns: ISelectableReference[]): ISelectQueryContext<TTables>;
 
     /** SELECT DISTINCT */
-    selectDistinct(...columns: IReference[]): ISelectQueryContext<TTables>;
+    selectDistinct(
+      ...columns: ISelectableReference[]
+    ): ISelectQueryContext<TTables>;
 
     /** FROM ... */
     from(table: string): ISelectQueryContext<TTables>;
@@ -112,5 +124,9 @@ type ISelectQueryContext<TTables extends Record<string, unknown>> =
 
     /** WHERE ... */
     where(condition: IPredicate): ISelectQueryContext<TTables>;
+
+    count(reference: IReference): ICountReference;
+    countDistinct(reference: IReference): ICountReference;
+
     getQuery(): ISelectQuery<TTables>;
   };
