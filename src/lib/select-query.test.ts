@@ -314,4 +314,75 @@ describe("Select Query", () => {
       ],
     });
   });
+
+  test("SELECT country FROM person RIGHT JOIN personAddress ON id = personId WHERE id IS NULL", () => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
+      const personId = ctx.getColumn("person", "id");
+      const isSamePerson = personId.isEqualTo(
+        ctx.getColumn("personAddress", "personId")
+      );
+
+      ctx
+        .select(ctx.getColumn("personAddress", "country"))
+        .from("person")
+        .rightJoin("personAddress", isSamePerson)
+        .where(personId.isNull());
+    });
+
+    expect(query).toMatchObject({
+      selectList: [{ table: "personAddress", column: "country" }],
+      mainTable: "person",
+      joinedTables: [
+        {
+          table: "personAddress",
+          type: "RIGHT",
+          predicate: {
+            left: { table: "person", column: "id" },
+            operator: "=",
+            right: { table: "personAddress", column: "personId" },
+          },
+        },
+      ],
+      searchCondition: {
+        left: { table: "person", column: "id" },
+        operator: "IS NULL",
+      },
+    });
+  });
+
+  test("SELECT name FROM person LEFT JOIN personAddress ON id = personId WHERE personId IS NULL", () => {
+    const query = createSelectQuery<QueryTables>((ctx) => {
+      const [personPersonId, personAddressPersonId] = [
+        ctx.getColumn("person", "id"),
+        ctx.getColumn("personAddress", "personId"),
+      ];
+      const isSamePerson = personPersonId.isEqualTo(personAddressPersonId);
+
+      ctx
+        .select(ctx.getColumn("person", "name"))
+        .from("person")
+        .leftJoin("personAddress", isSamePerson)
+        .where(personAddressPersonId.isNull());
+    });
+
+    expect(query).toMatchObject({
+      selectList: [{ table: "person", column: "name" }],
+      mainTable: "person",
+      joinedTables: [
+        {
+          table: "personAddress",
+          type: "LEFT",
+          predicate: {
+            left: { table: "person", column: "id" },
+            operator: "=",
+            right: { table: "personAddress", column: "personId" },
+          },
+        },
+      ],
+      searchCondition: {
+        left: { table: "personAddress", column: "personId" },
+        operator: "IS NULL",
+      },
+    });
+  });
 });

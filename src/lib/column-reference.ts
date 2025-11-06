@@ -28,5 +28,11 @@ export const createColumnReference = <TTable, TColumn>(
     isLessThanOrEqualTo(other: IReference): IComparisonPredicate {
       return createComparisonPredicate(this, "<=", other);
     },
+    isNull() {
+      return createComparisonPredicate(this, "IS NULL");
+    },
+    isNotNull() {
+      return createComparisonPredicate(this, "IS NOT NULL");
+    },
   };
 };

@@ -4,7 +4,7 @@ import { createNegatedPredicate } from "./negated-predicate";
 export const createComparisonPredicate = (
   left: IReference,
   operator: IComparisonPredicate["operator"],
-  right: IReference
+  right?: IReference
 ): IComparisonPredicate => {
   return {
     left: left,
@@ -13,7 +13,10 @@ export const createComparisonPredicate = (
     // isNegated: false,
     // isWrapped: false,
     build() {
-      return `${this.left.build()} ${this.operator} ${this.right.build()}`;
+      if (this.right) {
+        return `${this.left.build()} ${this.operator} ${this.right.build()}`;
+      }
+      return `${this.left.build()} ${this.operator}`;
     },
 
     and(other: IComparisonPredicate): IBooleanPredicate {

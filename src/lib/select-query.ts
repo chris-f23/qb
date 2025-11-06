@@ -14,7 +14,11 @@ const createSelectQueryContext = <
 >(): ISelectQueryContext<TTables> => {
   const selectList: IReference[] = [];
   let mainTable: keyof TTables;
-  const joinedTables: { table: keyof TTables; predicate: IPredicate }[] = [];
+  const joinedTables: {
+    table: keyof TTables;
+    predicate: IPredicate;
+    type?: "LEFT" | "RIGHT";
+  }[] = [];
   let searchCondition: IPredicate;
 
   const getColumn = <
@@ -32,12 +36,24 @@ const createSelectQueryContext = <
       selectList.push(...columns);
       return this;
     },
+
     from(table: string) {
       mainTable = table;
       return this;
     },
+
     join(table: string, condition: IPredicate) {
       joinedTables.push({ table: table, predicate: condition });
+      return this;
+    },
+
+    leftJoin(table: string, condition: IPredicate) {
+      joinedTables.push({ table: table, predicate: condition, type: "LEFT" });
+      return this;
+    },
+
+    rightJoin(table: string, condition: IPredicate) {
+      joinedTables.push({ table: table, predicate: condition, type: "RIGHT" });
       return this;
     },
 

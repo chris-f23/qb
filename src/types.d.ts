@@ -8,6 +8,9 @@ type IReference = {
   isGreaterThanOrEqualTo(other: IReference): IComparisonPredicate;
   isLessThan(other: IReference): IComparisonPredicate;
   isLessThanOrEqualTo(other: IReference): IComparisonPredicate;
+
+  isNull(): IComparisonPredicate;
+  isNotNull(): IComparisonPredicate;
 };
 
 type IColumnReference<TTable, TColumn> = IReference & {
@@ -29,8 +32,8 @@ type IPredicate = {
 /** Predicado que compara 2 referencias mediante operadores de tipo "es igual a", "es menor a", "es mayor o igual a", etc */
 type IComparisonPredicate = IPredicate & {
   left: IReference;
-  operator: "=" | ">" | "<" | "<=" | ">=" | "<>";
-  right: IReference;
+  operator: "=" | ">" | "<" | "<=" | ">=" | "<>" | "IS NULL" | "IS NOT NULL";
+  right?: IReference;
 
   and(other: IPredicate): IBooleanPredicate;
   or(other: IPredicate): IBooleanPredicate;
@@ -56,7 +59,13 @@ type IQuery<TTables extends Record<string, unknown>> = {
 type ISelectQuery<TTables extends Record<string, unknown>> = IQuery<TTables> & {
   selectList: IReference[];
   mainTable: keyof TTables | undefined;
-  joinedTables: { table: keyof TTables; predicate: IPredicate }[] | undefined;
+  joinedTables:
+    | {
+        table: keyof TTables;
+        predicate: IPredicate;
+        type?: "LEFT" | "RIGHT";
+      }[]
+    | undefined;
   searchCondition: IPredicate | undefined;
   // TODO: WHERE...
 };
@@ -76,9 +85,17 @@ type IQueryContext<TTables extends Record<string, unknown>> = {
 
 type ISelectQueryContext<TTables extends Record<string, unknown>> =
   IQueryContext<TTables> & {
-    select(...columns: IReference[]): ISelectQueryContext;
+    select(...columns: IReference[]): ISelectQueryContext<TTables>;
     from(table: string): ISelectQueryContext<TTables>;
     join(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
+    leftJoin(
+      table: string,
+      condition: IPredicate
+    ): ISelectQueryContext<TTables>;
+    rightJoin(
+      table: string,
+      condition: IPredicate
+    ): ISelectQueryContext<TTables>;
     where(condition: IPredicate): ISelectQueryContext<TTables>;
     getQuery(): ISelectQuery<TTables>;
   };

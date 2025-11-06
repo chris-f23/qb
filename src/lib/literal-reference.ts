@@ -1,10 +1,12 @@
 import { createComparisonPredicate } from "./comparison-predicate";
 
-export const createLiteralReference = (value: string): ILiteralReference => {
+export const createLiteralReference = (
+  value: ILiteralValue
+): ILiteralReference => {
   return {
     value: value,
-    build() {
-      return this.value;
+    build(): string {
+      return `${this.value}`;
     },
     isEqualTo(other: IReference): IComparisonPredicate {
       return createComparisonPredicate(this, "=", other);
@@ -23,6 +25,12 @@ export const createLiteralReference = (value: string): ILiteralReference => {
     },
     isLessThanOrEqualTo(other: IReference): IComparisonPredicate {
       return createComparisonPredicate(this, "<=", other);
+    },
+    isNull(): IComparisonPredicate {
+      return createComparisonPredicate(this, "IS NULL");
+    },
+    isNotNull(): IComparisonPredicate {
+      return createComparisonPredicate(this, "IS NOT NULL");
     },
   };
 };
