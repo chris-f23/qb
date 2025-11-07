@@ -1,3 +1,12 @@
+type IQueryTable = {
+  name: string;
+  schemaName: string;
+  databaseName: string;
+  columns: {
+    [name: string]: "VARCHAR" | "INT";
+  };
+};
+
 /** Referencia a cualquier valor dentro de la consulta */
 type IReference = {
   build(): string;
@@ -62,31 +71,33 @@ type INegatedPredicate = IPredicate & {
   operator: "NOT";
 };
 
-type IQuery<TTables extends Record<string, unknown>> = {
+type IQuery<TTables extends Record<string, IQueryTable>> = {
+  involvedTables: TTables;
   build(): string;
 };
 
-type ISelectQuery<TTables extends Record<string, unknown>> = IQuery<TTables> & {
-  selectList: ISelectableReference[];
-  selectMode?: "DISTINCT";
-  mainTable: keyof TTables | undefined;
-  joinedTables:
-    | {
-        table: keyof TTables;
-        predicate: IPredicate;
-        type?: "LEFT" | "RIGHT";
-      }[]
-    | undefined;
-  searchCondition: IPredicate | undefined;
-  // TODO: WHERE...
-};
+type ISelectQuery<TTables extends Record<string, IQueryTable>> =
+  IQuery<TTables> & {
+    selectList: ISelectableReference[];
+    selectMode?: "DISTINCT";
+    mainTable: keyof TTables | undefined;
+    joinedTables:
+      | {
+          table: keyof TTables;
+          predicate: IPredicate;
+          type?: "LEFT" | "RIGHT";
+        }[]
+      | undefined;
+    searchCondition: IPredicate | undefined;
+    // TODO: WHERE...
+  };
 
 type ILiteralValue = string | number | boolean;
 
-type IQueryContext<TTables extends Record<string, unknown>> = {
+type IQueryContext<TTables extends Record<string, IQueryTable>> = {
   getColumn<
     TTable extends keyof TTables,
-    TColumn extends keyof TTables[TTable]
+    TColumn extends keyof TTables[TTable]["columns"]
   >(
     table: TTable,
     column: TColumn
@@ -94,7 +105,7 @@ type IQueryContext<TTables extends Record<string, unknown>> = {
   literal(value: ILiteralValue): ILiteralReference;
 };
 
-type ISelectQueryContext<TTables extends Record<string, unknown>> =
+type ISelectQueryContext<TTables extends Record<string, IQueryTable>> =
   IQueryContext<TTables> & {
     /** SELECT [ALL] */
     select(...columns: ISelectableReference[]): ISelectQueryContext<TTables>;
@@ -105,7 +116,7 @@ type ISelectQueryContext<TTables extends Record<string, unknown>> =
     ): ISelectQueryContext<TTables>;
 
     /** FROM ... */
-    from(table: string): ISelectQueryContext<TTables>;
+    from(table: keyof TTables): ISelectQueryContext<TTables>;
 
     /** JOIN ... ON ... */
     join(table: string, condition: IPredicate): ISelectQueryContext<TTables>;

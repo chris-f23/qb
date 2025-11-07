@@ -2,17 +2,20 @@ import { createColumnReference } from "./column-reference";
 import { createCountReference } from "./count-reference";
 import { createLiteralReference } from "./literal-reference";
 
-export const createSelectQuery = <TTables extends Record<string, unknown>>(
-  defineCallback: (ctx: ISelectQueryContext<TTables>) => void
+export const createSelectQuery = <TTables extends Record<string, IQueryTable>>(
+  involvedTables: TTables,
+  defineCallback: (
+    ctx: ISelectQueryContext<TTables>
+  ) => ISelectQueryContext<TTables> | void
 ): ISelectQuery<TTables> => {
-  const ctx = createSelectQueryContext();
+  const ctx = createSelectQueryContext(involvedTables);
   defineCallback(ctx);
   return ctx.getQuery();
 };
 
-const createSelectQueryContext = <
-  TTables extends Record<string, unknown>
->(): ISelectQueryContext<TTables> => {
+const createSelectQueryContext = <TTables extends Record<string, IQueryTable>>(
+  tables: TTables
+): ISelectQueryContext<TTables> => {
   const selectList: ISelectableReference[] = [];
   let selectMode: ISelectQuery<TTables>["selectMode"];
   let mainTable: keyof TTables;
@@ -25,7 +28,7 @@ const createSelectQueryContext = <
 
   const getColumn = <
     TTable extends keyof TTables,
-    TColumn extends keyof TTables[TTable]
+    TColumn extends keyof TTables[TTable]["columns"]
   >(
     table: TTable,
     column: TColumn
@@ -91,6 +94,7 @@ const createSelectQueryContext = <
         mainTable: mainTable,
         joinedTables: joinedTables,
         searchCondition: searchCondition,
+        involvedTables: tables,
         build() {
           return "wip";
         },
