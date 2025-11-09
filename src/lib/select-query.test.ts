@@ -523,4 +523,47 @@ describe("Select Query", () => {
       mainTable: "person",
     });
   });
+  test("SELECT ProductID, Name FROM Production.Product WHERE Name LIKE 'Lock Washer%' ORDER BY ProductID", () => {
+    const productTable: IQueryTable = {
+      name: "Product",
+      schemaName: "Production",
+      columns: {
+        ProductID: "INT",
+        Name: "VARCHAR",
+      },
+    };
+
+    const query = createSelectQuery(
+      {
+        pr: productTable,
+      },
+      (ctx) => {
+        const [productId, productName] = [
+          ctx.getColumn("pr", "ProductID"),
+          ctx.getColumn("pr", "Name"),
+        ];
+
+        ctx
+          .select(productId, productName)
+          .from("pr")
+          .where(productName.isLike(ctx.literal("Lock Washer%")))
+          .orderBy(productId.sortAscending());
+      }
+    );
+    expect(query).toMatchObject({
+      selectList: [
+        { table: "pr", column: "ProductID" },
+        { table: "pr", column: "Name" },
+      ],
+      mainTable: "pr",
+      searchCondition: {
+        left: { table: "pr", column: "Name" },
+        operator: "LIKE",
+        right: { value: "Lock Washer%" },
+      },
+      orderByList: [
+        { original: { table: "pr", column: "ProductID" }, order: "ASC" },
+      ],
+    });
+  });
 });

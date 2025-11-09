@@ -1,4 +1,5 @@
 import { createComparisonPredicate } from "./comparison-predicate";
+import { createOrderableReference } from "./orderable-reference";
 
 export const createLiteralReference = (
   value: ILiteralValue
@@ -31,6 +32,15 @@ export const createLiteralReference = (
     },
     isNotNull(): IComparisonPredicate {
       return createComparisonPredicate(this, "IS NOT NULL");
+    },
+    isLike(pattern) {
+      return createComparisonPredicate(this, "LIKE", pattern);
+    },
+    sortAscending() {
+      return createOrderableReference(this, "ASC");
+    },
+    sortDescending() {
+      return createOrderableReference(this, "DESC");
     },
   };
 };

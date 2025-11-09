@@ -1,10 +1,15 @@
 type IQueryTable = {
   name: string;
-  schemaName: string;
-  databaseName: string;
+  schemaName?: string;
+  databaseName?: string;
   columns: {
     [name: string]: "VARCHAR" | "INT";
   };
+};
+
+type IOrderableReference = {
+  original: IReference;
+  order: "ASC" | "DESC";
 };
 
 /** Referencia a cualquier valor dentro de la consulta */
@@ -18,8 +23,13 @@ type IReference = {
   isLessThan(other: IReference): IComparisonPredicate;
   isLessThanOrEqualTo(other: IReference): IComparisonPredicate;
 
+  isLike(pattern: IReference): IComparisonPredicate;
+
   isNull(): IComparisonPredicate;
   isNotNull(): IComparisonPredicate;
+
+  sortAscending(): IOrderableReference;
+  sortDescending(): IOrderableReference;
 };
 
 type ICountReference = {
@@ -51,7 +61,7 @@ type IPredicate = {
 /** Predicado que compara 2 referencias mediante operadores de tipo "es igual a", "es menor a", "es mayor o igual a", etc */
 type IComparisonPredicate = IPredicate & {
   left: IReference;
-  operator: "=" | ">" | "<" | "<=" | ">=" | "<>" | "IS NULL" | "IS NOT NULL";
+  operator: "=" | ">" | "<" | "<=" | ">=" | "<>" | "IS NULL" | "IS NOT NULL" | "LIKE" | "NOT LIKE";
   right?: IReference;
 
   and(other: IPredicate): IBooleanPredicate;
@@ -89,7 +99,7 @@ type ISelectQuery<TTables extends Record<string, IQueryTable>> =
         }[]
       | undefined;
     searchCondition: IPredicate | undefined;
-    // TODO: WHERE...
+    orderByList: IOrderableReference[] | undefined;
   };
 
 type ILiteralValue = string | number | boolean;
@@ -135,7 +145,7 @@ type ISelectQueryContext<TTables extends Record<string, IQueryTable>> =
 
     /** WHERE ... */
     where(condition: IPredicate): ISelectQueryContext<TTables>;
-
+    orderBy(...columns: IOrderableReference[]): ISelectQueryContext<TTables>;
     count(reference: IReference): ICountReference;
     countDistinct(reference: IReference): ICountReference;
 

@@ -26,6 +26,8 @@ const createSelectQueryContext = <TTables extends Record<string, IQueryTable>>(
   }[] = [];
   let searchCondition: IPredicate;
 
+  const orderByList: IOrderableReference[] = [];
+
   const getColumn = <
     TTable extends keyof TTables,
     TColumn extends keyof TTables[TTable]["columns"]
@@ -73,6 +75,11 @@ const createSelectQueryContext = <TTables extends Record<string, IQueryTable>>(
       return this;
     },
 
+    orderBy(...columns) {
+      orderByList.push(...columns);
+      return this;
+    },
+
     getColumn: getColumn,
 
     count(reference) {
@@ -94,6 +101,7 @@ const createSelectQueryContext = <TTables extends Record<string, IQueryTable>>(
         mainTable: mainTable,
         joinedTables: joinedTables,
         searchCondition: searchCondition,
+        orderByList: orderByList,
         involvedTables: tables,
         build() {
           return "wip";
