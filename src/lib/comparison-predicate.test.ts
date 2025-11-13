@@ -5,7 +5,19 @@ describe("Comparison Predicates", () => {
   const leftReference = createColumnReference("person", "id");
   const rightReference = createColumnReference("personAddress", "id");
 
-  const cases: Array<[keyof IReference, string]> = [
+  const cases: Array<
+    [
+      (
+        | "isEqualTo"
+        | "isNotEqualTo"
+        | "isGreaterThan"
+        | "isGreaterThanOrEqualTo"
+        | "isLessThan"
+        | "isLessThanOrEqualTo"
+      ),
+      string
+    ]
+  > = [
     ["isEqualTo", "="],
     ["isNotEqualTo", "<>"],
     ["isGreaterThan", ">"],

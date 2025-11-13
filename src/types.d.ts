@@ -1,10 +1,12 @@
-type IQueryTable = {
+type ITableColumnDataType = "INT" | "VARCHAR";
+
+type IQueryableTable<
+  UTableColumns extends Record<string, ITableColumnDataType>
+> = {
   name: string;
   schemaName?: string;
   databaseName?: string;
-  columns: {
-    [name: string]: "VARCHAR" | "INT";
-  };
+  columns: UTableColumns;
 };
 
 type IOrderableReference = {
@@ -23,13 +25,23 @@ type IReference = {
   isLessThan(other: IReference): IComparisonPredicate;
   isLessThanOrEqualTo(other: IReference): IComparisonPredicate;
 
-  isLike(pattern: IReference): IComparisonPredicate;
-
   isNull(): IComparisonPredicate;
   isNotNull(): IComparisonPredicate;
 
   sortAscending(): IOrderableReference;
   sortDescending(): IOrderableReference;
+
+  isLike(pattern: IReference): ILikePredicate;
+  isNotLike(pattern: IReference): ILikePredicate;
+
+  isInSubquery(query: ISelectQuery): IInSubqueryPredicate;
+  isNotInSubquery(query: ISelectQuery): IInSubqueryPredicate;
+
+  isInExpressionList(): IInExpressionListPredicate;
+  isNotInExpressionList(): IInExpressionListPredicate;
+
+  isBetween(begin: IReference, end: IReference): IBetweenPredicate;
+  isNotBetween(begin: IReference, end: IReference): IBetweenPredicate;
 };
 
 type ICountReference = {
@@ -55,24 +67,44 @@ type ISelectableReference = {
 type IPredicate = {
   operator: string;
   isWrapped?: boolean;
+  isNegated?: boolean;
   build(): string;
+};
+
+type ILikePredicate = IPredicate & {
+  left: IReference;
+  pattern: IReference;
+  operator: "LIKE";
+};
+
+type IBetweenPredicate = IPredicate & {
+  left: IReference;
+  begin: IReference;
+  end: IReference;
+  operator: "BETWEEN";
 };
 
 /** Predicado que compara 2 referencias mediante operadores de tipo "es igual a", "es menor a", "es mayor o igual a", etc */
 type IComparisonPredicate = IPredicate & {
   left: IReference;
-  operator: "=" | ">" | "<" | "<=" | ">=" | "<>" | "IS NULL" | "IS NOT NULL" | "LIKE" | "NOT LIKE";
+  operator: "=" | ">" | "<" | "<=" | ">=" | "<>" | "IS NULL" | "IS NOT NULL";
+
   right?: IReference;
 
-  and(other: IPredicate): IBooleanPredicate;
-  or(other: IPredicate): IBooleanPredicate;
+  and(other: IPredicate): IAndPredicate;
+  or(other: IPredicate): IOrPredicate;
   not(): INegatedPredicate;
 };
 
-/** Predicado que compara 2 predicados mediante operadores "o" u "y" */
-type IBooleanPredicate = IPredicate & {
+type IAndPredicate = IPredicate & {
   left: IPredicate;
-  operator: "OR" | "AND";
+  operator: "AND";
+  right: IPredicate;
+};
+
+type IOrPredicate = IPredicate & {
+  left: IPredicate;
+  operator: "OR";
   right: IPredicate;
 };
 
@@ -81,12 +113,24 @@ type INegatedPredicate = IPredicate & {
   operator: "NOT";
 };
 
-type IQuery<TTables extends Record<string, IQueryTable>> = {
+type IInExpressionListPredicate = IPredicate & {
+  left: IReference;
+  operator: "IN_EXPRESSION_LIST";
+  expressionList: IReference[];
+};
+
+type IInSubqueryPredicate = IPredicate & {
+  left: IReference;
+  operator: "IN_SUBQUERY";
+  subquery: ISelectQuery;
+};
+
+type IQuery<TTables extends Record<string, IQueryableTable>> = {
   involvedTables: TTables;
   build(): string;
 };
 
-type ISelectQuery<TTables extends Record<string, IQueryTable>> =
+type ISelectQuery<TTables extends Record<string, IQueryableTable>> =
   IQuery<TTables> & {
     selectList: ISelectableReference[];
     selectMode?: "DISTINCT";
@@ -104,18 +148,18 @@ type ISelectQuery<TTables extends Record<string, IQueryTable>> =
 
 type ILiteralValue = string | number | boolean;
 
-type IQueryContext<TTables extends Record<string, IQueryTable>> = {
+type IQueryContext<TTables extends Record<string, IQueryableTable>> = {
   getColumn<
-    TTable extends keyof TTables,
-    TColumn extends keyof TTables[TTable]["columns"]
+    UTableAlias extends keyof TTables,
+    UColumnName extends keyof TTables[UTableAlias]["columns"]
   >(
-    table: TTable,
-    column: TColumn
-  ): IColumnReference<TTable, TColumn>;
+    table: UTableAlias,
+    column: UColumnName
+  ): IColumnReference<UTableAlias, UColumnName>;
   literal(value: ILiteralValue): ILiteralReference;
 };
 
-type ISelectQueryContext<TTables extends Record<string, IQueryTable>> =
+type ISelectQueryContext<TTables extends Record<string, IQueryableTable>> =
   IQueryContext<TTables> & {
     /** SELECT [ALL] */
     select(...columns: ISelectableReference[]): ISelectQueryContext<TTables>;

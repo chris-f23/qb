@@ -2,7 +2,9 @@ import { createColumnReference } from "./column-reference";
 import { createCountReference } from "./count-reference";
 import { createLiteralReference } from "./literal-reference";
 
-export const createSelectQuery = <TTables extends Record<string, IQueryTable>>(
+export const createSelectQuery = <
+  TTables extends Record<string, IQueryableTable<any>>
+>(
   involvedTables: TTables,
   defineCallback: (
     ctx: ISelectQueryContext<TTables>
@@ -13,7 +15,9 @@ export const createSelectQuery = <TTables extends Record<string, IQueryTable>>(
   return ctx.getQuery();
 };
 
-const createSelectQueryContext = <TTables extends Record<string, IQueryTable>>(
+const createSelectQueryContext = <
+  TTables extends Record<string, IQueryableTable<any>>
+>(
   tables: TTables
 ): ISelectQueryContext<TTables> => {
   const selectList: ISelectableReference[] = [];
@@ -28,15 +32,12 @@ const createSelectQueryContext = <TTables extends Record<string, IQueryTable>>(
 
   const orderByList: IOrderableReference[] = [];
 
-  const getColumn = <
-    TTable extends keyof TTables,
-    TColumn extends keyof TTables[TTable]["columns"]
-  >(
-    table: TTable,
-    column: TColumn
-  ): IColumnReference<TTable, TColumn> => {
-    return createColumnReference(table, column);
-  };
+  // const getColumn = <UTable extends keyof TTables>(
+  //   table: UTable,
+  //   column: keyof TTables[UTable]["columns"]
+  // ): IColumnReference<UTable, keyof TTables[UTable]["columns"]> => {
+  //   return createColumnReference(table, column);
+  // };
 
   return {
     select(...columns: ISelectableReference[]) {
@@ -80,7 +81,9 @@ const createSelectQueryContext = <TTables extends Record<string, IQueryTable>>(
       return this;
     },
 
-    getColumn: getColumn,
+    getColumn: (table, column) => {
+      return createColumnReference(table, column);
+    },
 
     count(reference) {
       return createCountReference(reference, false);

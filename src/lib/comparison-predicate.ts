@@ -1,5 +1,8 @@
-import { createBooleanPredicate } from "./boolean-predicate";
-import { createNegatedPredicate } from "./negated-predicate";
+import {
+  createAndPredicate,
+  createNegatedPredicate,
+  createOrPredicate,
+} from "./logical-predicate";
 
 export const createComparisonPredicate = (
   left: IReference,
@@ -19,12 +22,12 @@ export const createComparisonPredicate = (
       return `${this.left.build()} ${this.operator}`;
     },
 
-    and(other: IComparisonPredicate): IBooleanPredicate {
-      return createBooleanPredicate(this, "AND", other);
+    and(other: IComparisonPredicate): IAndPredicate {
+      return createAndPredicate(this, other);
     },
 
-    or(other: IComparisonPredicate): IBooleanPredicate {
-      return createBooleanPredicate(this, "OR", other);
+    or(other: IComparisonPredicate): IOrPredicate {
+      return createOrPredicate(this, other);
     },
 
     not(): INegatedPredicate {

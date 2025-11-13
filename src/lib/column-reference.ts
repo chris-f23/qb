@@ -1,4 +1,10 @@
 import { createComparisonPredicate } from "./comparison-predicate";
+import {
+  createBetweenPredicate,
+  createInExpressionListPredicate,
+  createInSubqueryPredicate,
+  createLikePredicate,
+} from "./logical-predicate";
 import { createOrderableReference } from "./orderable-reference";
 
 export const createColumnReference = <TTable, TColumn>(
@@ -35,14 +41,41 @@ export const createColumnReference = <TTable, TColumn>(
     isNotNull() {
       return createComparisonPredicate(this, "IS NOT NULL");
     },
-    isLike(pattern) {
-      return createComparisonPredicate(this, "LIKE", pattern);
-    },
+
     sortAscending() {
       return createOrderableReference(this, "ASC");
     },
     sortDescending() {
       return createOrderableReference(this, "DESC");
+    },
+
+    isLike(pattern) {
+      return createLikePredicate(this, pattern, false);
+    },
+    isNotLike(pattern) {
+      return createLikePredicate(this, pattern, true);
+    },
+
+    isInSubquery(subquery) {
+      return createInSubqueryPredicate(this, subquery, false);
+    },
+
+    isNotInSubquery(subquery) {
+      return createInSubqueryPredicate(this, subquery, true);
+    },
+
+    isInExpressionList(...expressions: IReference[]) {
+      return createInExpressionListPredicate(this, expressions, false);
+    },
+    isNotInExpressionList(...expressions: IReference[]) {
+      return createInExpressionListPredicate(this, expressions, true);
+    },
+
+    isBetween(begin: IReference, end: IReference) {
+      return createBetweenPredicate(this, begin, end, false);
+    },
+    isNotBetween(begin: IReference, end: IReference) {
+      return createBetweenPredicate(this, begin, end, true);
     },
   };
 };
