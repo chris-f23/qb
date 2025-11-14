@@ -1,4 +1,4 @@
-type ITableColumnDataType = "INT" | "VARCHAR";
+type ITableColumnDataType = "INT" | "VARCHAR" | "DATETIME";
 
 type IQueryableTable<
   UTableColumns extends Record<string, ITableColumnDataType>
@@ -190,6 +190,8 @@ type ISelectQueryContext<TTables extends Record<string, IQueryableTable>> =
     /** WHERE ... */
     where(condition: IPredicate): ISelectQueryContext<TTables>;
     orderBy(...columns: IOrderableReference[]): ISelectQueryContext<TTables>;
+
+    /** COUNT (...) */
     count(reference: IReference): ICountReference;
     countDistinct(reference: IReference): ICountReference;
 
