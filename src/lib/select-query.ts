@@ -81,20 +81,12 @@ const createSelectQueryContext = <
       return this;
     },
 
-    getColumn: (table, column) => {
-      return createColumnReference(table, column);
-    },
-
     count(reference) {
       return createCountReference(reference, false);
     },
 
     countDistinct(reference) {
       return createCountReference(reference, true);
-    },
-
-    literal(value) {
-      return createLiteralReference(value);
     },
 
     getQuery(): ISelectQuery<TTables> {

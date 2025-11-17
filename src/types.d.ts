@@ -156,44 +156,50 @@ type IQueryContext<TTables extends Record<string, IQueryableTable>> = {
     table: UTableAlias,
     column: UColumnName
   ): IColumnReference<UTableAlias, UColumnName>;
+  $col<
+    UTableAlias extends keyof TTables,
+    UColumnName extends keyof TTables[UTableAlias]["columns"]
+  >(
+    table: UTableAlias,
+    column: UColumnName
+  ): IColumnReference<UTableAlias, UColumnName>;
+
   literal(value: ILiteralValue): ILiteralReference;
+  $val(value: ILiteralValue): ILiteralReference;
+
+  createSelectQuery: (
+    defineCallback: (ctx: ISelectQueryContext<TTables>) => void
+  ) => ISelectQuery<TTables>;
 };
 
-type ISelectQueryContext<TTables extends Record<string, IQueryableTable>> =
-  IQueryContext<TTables> & {
-    /** SELECT [ALL] */
-    select(...columns: ISelectableReference[]): ISelectQueryContext<TTables>;
+type ISelectQueryContext<TTables extends Record<string, IQueryableTable>> = {
+  /** SELECT [ALL] */
+  select(...columns: ISelectableReference[]): ISelectQueryContext<TTables>;
 
-    /** SELECT DISTINCT */
-    selectDistinct(
-      ...columns: ISelectableReference[]
-    ): ISelectQueryContext<TTables>;
+  /** SELECT DISTINCT */
+  selectDistinct(
+    ...columns: ISelectableReference[]
+  ): ISelectQueryContext<TTables>;
 
-    /** FROM ... */
-    from(table: keyof TTables): ISelectQueryContext<TTables>;
+  /** FROM ... */
+  from(table: keyof TTables): ISelectQueryContext<TTables>;
 
-    /** JOIN ... ON ... */
-    join(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
+  /** JOIN ... ON ... */
+  join(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
 
-    /** LEFT JOIN ... ON ... */
-    leftJoin(
-      table: string,
-      condition: IPredicate
-    ): ISelectQueryContext<TTables>;
+  /** LEFT JOIN ... ON ... */
+  leftJoin(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
 
-    /** RIGHT JOIN ... ON ... */
-    rightJoin(
-      table: string,
-      condition: IPredicate
-    ): ISelectQueryContext<TTables>;
+  /** RIGHT JOIN ... ON ... */
+  rightJoin(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
 
-    /** WHERE ... */
-    where(condition: IPredicate): ISelectQueryContext<TTables>;
-    orderBy(...columns: IOrderableReference[]): ISelectQueryContext<TTables>;
+  /** WHERE ... */
+  where(condition: IPredicate): ISelectQueryContext<TTables>;
+  orderBy(...columns: IOrderableReference[]): ISelectQueryContext<TTables>;
 
-    /** COUNT (...) */
-    count(reference: IReference): ICountReference;
-    countDistinct(reference: IReference): ICountReference;
+  /** COUNT (...) */
+  count(reference: IReference): ICountReference;
+  countDistinct(reference: IReference): ICountReference;
 
-    getQuery(): ISelectQuery<TTables>;
-  };
+  getQuery(): ISelectQuery<TTables>;
+};
