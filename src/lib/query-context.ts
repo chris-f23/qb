@@ -1,5 +1,9 @@
 import { createColumnReference } from "./column-reference";
 import { createComparisonPredicate } from "./comparison-predicate";
+import {
+  createConcatReference,
+  createConcatWithSeparatorReference,
+} from "./function-reference";
 import { createLiteralReference } from "./literal-reference";
 import {
   createAndPredicate,
@@ -71,6 +75,14 @@ export const createQueryContext = <
 
     val(value) {
       return createLiteralReference(value);
+    },
+
+    concat(...values) {
+      return createConcatReference(values);
+    },
+
+    concat_ws(separator, ...values) {
+      return createConcatWithSeparatorReference(separator, values);
     },
   };
 };

@@ -14,6 +14,12 @@ type IOrderableReference = {
   order: "ASC" | "DESC";
 };
 
+type IConcatReference = {
+  values: IReference[];
+  separator?: IReference;
+  build(): string;
+};
+
 /** Referencia a cualquier valor dentro de la consulta */
 type IReference = {
   build(): string;
@@ -264,6 +270,10 @@ type IQueryContext<TTables extends Record<string, IQueryableTable>> = {
    * Compiles to `NOT [predicate]`
    */
   not(predicate: IPredicate): INegatedPredicate;
+
+  concat(...values: IReference[]): IConcatReference;
+
+  concat_ws(separator: IReference, ...values: IReference[]): IConcatReference;
 };
 
 type ISelectQueryContext<TTables extends Record<string, IQueryableTable>> = {

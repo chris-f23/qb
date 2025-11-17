@@ -13,7 +13,12 @@ export const createLiteralReference = (
   return {
     value: value,
     build(): string {
-      return `${this.value}`;
+      if (typeof this.value === "number") return `${this.value}`;
+      if (typeof this.value === "boolean") return `${this.value ? "1" : "0"}`;
+      if (this.value === null) return "NULL";
+
+      // Cualquier otro valor se asume que es un string.
+      return `'${this.value}'`;
     },
     isEqualTo(other: IReference): IComparisonPredicate {
       return createComparisonPredicate(this, "=", other);
