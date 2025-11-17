@@ -92,7 +92,35 @@ const createSelectQueryContext = <
         orderByList: orderByList,
         involvedTables: tables,
         build() {
-          return "wip";
+          let selection = `SELECT ${selectMode ?? ""}`;
+          if (selectList.length > 0) {
+            selection += selectList.map((ref) => ref.build()).join(", ");
+          }
+
+          let source = "";
+          if (this.mainTable) {
+            source += `FROM ${
+              this.involvedTables[this.mainTable].name
+            } AS ${this.mainTable.toString()}`;
+          }
+
+          if (this.joinedTables && this.joinedTables.length > 0) {
+            source += this.joinedTables
+              .map(
+                (jt) =>
+                  `${jt.type} JOIN ${
+                    this.involvedTables[jt.table]
+                  } AS ${jt.table.toString()} ON ${jt.predicate.build()}`
+              )
+              .join(" ");
+          }
+
+          let filter = "";
+          if (this.searchCondition) {
+            filter += `WHERE ${this.searchCondition.build()}`;
+          }
+
+          return `${selection} ${source} ${filter}`;
         },
       };
     },

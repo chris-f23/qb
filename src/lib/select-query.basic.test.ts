@@ -3,12 +3,12 @@ import { createQueryContext } from "./query-context";
 import { createQueryableTable } from "./queryable-table";
 
 const personTable = createQueryableTable({
-  name: "person",
+  name: "Person",
   columns: { id: "INT", name: "VARCHAR", age: "INT" },
 });
 
 const personAddressTable = createQueryableTable({
-  name: "personAddress",
+  name: "PersonAddress",
   schemaName: "dbo",
   databaseName: "db",
   columns: {
@@ -40,6 +40,7 @@ describe("SELECT FROM WHERE", () => {
       selectList: [{ table: "person", column: "id" }],
       mainTable: "person",
     });
+    expect(query.build()).toBe("SELECT id FROM person"); // WIP
   });
 
   test("SELECT t1.col1, t1.col2 FROM t1", () => {
