@@ -32,13 +32,6 @@ const createSelectQueryContext = <
 
   const orderByList: IOrderableReference[] = [];
 
-  // const getColumn = <UTable extends keyof TTables>(
-  //   table: UTable,
-  //   column: keyof TTables[UTable]["columns"]
-  // ): IColumnReference<UTable, keyof TTables[UTable]["columns"]> => {
-  //   return createColumnReference(table, column);
-  // };
-
   return {
     select(...columns: ISelectableReference[]) {
       selectList.push(...columns);

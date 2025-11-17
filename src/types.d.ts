@@ -149,27 +149,121 @@ type ISelectQuery<TTables extends Record<string, IQueryableTable>> =
 type ILiteralValue = string | number | boolean;
 
 type IQueryContext<TTables extends Record<string, IQueryableTable>> = {
-  getColumn<
-    UTableAlias extends keyof TTables,
-    UColumnName extends keyof TTables[UTableAlias]["columns"]
-  >(
-    table: UTableAlias,
-    column: UColumnName
-  ): IColumnReference<UTableAlias, UColumnName>;
-  $col<
-    UTableAlias extends keyof TTables,
-    UColumnName extends keyof TTables[UTableAlias]["columns"]
-  >(
-    table: UTableAlias,
-    column: UColumnName
-  ): IColumnReference<UTableAlias, UColumnName>;
-
-  literal(value: ILiteralValue): ILiteralReference;
-  $val(value: ILiteralValue): ILiteralReference;
-
+  /**
+   * Creates a select query.
+   *
+   * Compiles to a `SELECT` statement.
+   */
   createSelectQuery: (
     defineCallback: (ctx: ISelectQueryContext<TTables>) => void
   ) => ISelectQuery<TTables>;
+
+  /**
+   * Creates a reference to a column in a table.
+   *
+   * Compiles to `[table].[column]`
+   */
+  createColumnReference<
+    UTableAlias extends keyof TTables,
+    UColumnName extends keyof TTables[UTableAlias]["columns"]
+  >(
+    table: UTableAlias,
+    column: UColumnName
+  ): IColumnReference<UTableAlias, UColumnName>;
+
+  /**
+   * Alias for `createColumnReference`.
+   *
+   * Creates a reference to a column in a table.
+   *
+   * Compiles to `[table].[column]`
+   */
+  col<
+    UTableAlias extends keyof TTables,
+    UColumnName extends keyof TTables[UTableAlias]["columns"]
+  >(
+    table: UTableAlias,
+    column: UColumnName
+  ): IColumnReference<UTableAlias, UColumnName>;
+
+  /**
+   * Creates a literal reference.
+   *
+   * Compiles to `[value]`
+   */
+  createLiteralReference(value: ILiteralValue): ILiteralReference;
+
+  /**
+   * Alias for `createLiteralReference`.
+   *
+   * Creates a literal reference.
+   *
+   * Compiles to `[value]`
+   */
+  val(value: ILiteralValue): ILiteralReference;
+
+  /**
+   * Creates a comparison predicate between 2 references using the "=" operator.
+   *
+   * Compiles to `[left] = [right]`
+   */
+  eq(left: IReference, right: IReference): IComparisonPredicate;
+
+  /**
+   * Creates a comparison predicate between 2 references using the "<>" operator.
+   *
+   * Compiles to `[left] <> [right]`
+   */
+  neq(left: IReference, right: IReference): IComparisonPredicate;
+
+  /**
+   * Creates a comparison predicate between 2 references using the ">" operator.
+   *
+   * Compiles to `[left] > [right]`
+   */
+  gt(left: IReference, right: IReference): IComparisonPredicate;
+
+  /**
+   * Creates a comparison predicate between 2 references using the ">=" operator.
+   *
+   * Compiles to `[left] >= [right]`
+   */
+  gte(left: IReference, right: IReference): IComparisonPredicate;
+
+  /**
+   * Creates a comparison predicate between 2 references using the "<" operator.
+   *
+   * Compiles to `[left] < [right]`
+   */
+  lt(left: IReference, right: IReference): IComparisonPredicate;
+
+  /**
+   * Creates a comparison predicate between 2 references using the "<=" operator.
+   *
+   * Compiles to `[left] <= [right]`
+   */
+  lte(left: IReference, right: IReference): IComparisonPredicate;
+
+  /**
+   * Evaluates to true if both the given predicates evaluate to true.
+   *
+   * Compiles to `[left] AND [right]`
+   */
+  and(left: IPredicate, right: IPredicate): IAndPredicate;
+
+  /**
+   * Evaluates to true if any of the given predicates evaluate to true.
+   *
+   * Compiles to `[left] OR [right]`
+   */
+  or(left: IPredicate, right: IPredicate): IOrPredicate;
+
+  /**
+   * Evaluates to true if the given predicate does not evaluate to true.
+   *
+   * Compiles to `NOT [predicate]`
+   */
+  not(predicate: IPredicate): INegatedPredicate;
 };
 
 type ISelectQueryContext<TTables extends Record<string, IQueryableTable>> = {

@@ -39,8 +39,8 @@ describe("Select Query", () => {
   describe("Select clause", () => {
     test("SELECT literal", () => {
       // SELECT 1;
-      const { createSelectQuery, $val } = createQueryContext({});
-      const query = createSelectQuery((ctx) => ctx.select($val(1)));
+      const { createSelectQuery, val } = createQueryContext({});
+      const query = createSelectQuery((ctx) => ctx.select(val(1)));
       expect(query).toMatchObject({ selectList: [{ value: 1 }] });
     });
   });
@@ -48,12 +48,12 @@ describe("Select Query", () => {
   describe("From clause", () => {
     test("SELECT t1.col1 FROM t1", () => {
       // SELECT id FROM person
-      const { createSelectQuery, $col } = createQueryContext({
+      const { createSelectQuery, col } = createQueryContext({
         person: personTable,
         personAddress: personAddressTable,
       });
       const query = createSelectQuery((ctx) =>
-        ctx.select($col("person", "id")).from("person")
+        ctx.select(col("person", "id")).from("person")
       );
       expect(query).toMatchObject({
         selectList: [{ table: "person", column: "id" }],
@@ -63,14 +63,14 @@ describe("Select Query", () => {
 
     test("SELECT t1.col1, t1.col2 FROM t1", () => {
       // SELECT name, id FROM person
-      const { createSelectQuery, $col } = createQueryContext({
+      const { createSelectQuery, col } = createQueryContext({
         person: personTable,
       });
 
       const query = createSelectQuery((ctx) => {
         const [personId, personName] = [
-          $col("person", "id"),
-          $col("person", "name"),
+          col("person", "id"),
+          col("person", "name"),
         ];
         ctx.select(personId, personName).from("person");
       });
@@ -88,18 +88,18 @@ describe("Select Query", () => {
   describe("Where clause", () => {
     test("SELECT ... FROM t1 WHERE t1.col = value", () => {
       //SELECT name FROM person WHERE id = 1
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col, val } = createQueryContext({
         person: personTable,
       });
       const query = createSelectQuery((ctx) => {
         const [personId, personName] = [
-          $col("person", "id"),
-          $col("person", "name"),
+          col("person", "id"),
+          col("person", "name"),
         ];
         ctx
           .select(personName)
           .from("person")
-          .where(personId.isEqualTo($val(1)));
+          .where(personId.isEqualTo(val(1)));
       });
 
       expect(query).toMatchObject({
@@ -117,24 +117,24 @@ describe("Select Query", () => {
   describe("Join clause", () => {
     test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk", () => {
       // SELECT id, name, age, country, city, street FROM person JOIN personAddress ON id = personId
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col } = createQueryContext({
         person: personTable,
         personAddress: personAddressTable,
       });
 
       const query = createSelectQuery((ctx) => {
-        const isSamePerson = $col("person", "id").isEqualTo(
-          $col("personAddress", "personId")
+        const isSamePerson = col("person", "id").isEqualTo(
+          col("personAddress", "personId")
         );
 
         ctx
           .select(
-            $col("person", "id"),
-            $col("person", "name"),
-            $col("person", "age"),
-            $col("personAddress", "country"),
-            $col("personAddress", "city"),
-            $col("personAddress", "street")
+            col("person", "id"),
+            col("person", "name"),
+            col("person", "age"),
+            col("personAddress", "country"),
+            col("personAddress", "city"),
+            col("personAddress", "street")
           )
           .from("person")
           .join("personAddress", isSamePerson);
@@ -165,23 +165,23 @@ describe("Select Query", () => {
 
     test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk AND t2.col = value", () => {
       // SELECT id, street FROM person JOIN personAddress ON id = personId AND country = 'Brazil'
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col, val } = createQueryContext({
         person: personTable,
         personAddress: personAddressTable,
       });
 
       const query = createSelectQuery((ctx) => {
-        const personId = $col("person", "id");
+        const personId = col("person", "id");
         const isSamePerson = personId.isEqualTo(
-          $col("personAddress", "personId")
+          col("personAddress", "personId")
         );
 
-        const isFromBrazil = $col("personAddress", "country").isEqualTo(
-          $val("Brazil")
+        const isFromBrazil = col("personAddress", "country").isEqualTo(
+          val("Brazil")
         );
 
         ctx
-          .select(personId, $col("personAddress", "street"))
+          .select(personId, col("personAddress", "street"))
           .from("person")
           .join("personAddress", isSamePerson.and(isFromBrazil));
       });
@@ -215,26 +215,34 @@ describe("Select Query", () => {
 
     test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk AND (t2.col = value1 OR t2.col = value2)", () => {
       // SELECT id, city FROM person JOIN personAddress ON id = personId AND (country = 'Brazil' OR country = 'Spain')
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col, val } = createQueryContext({
         person: personTable,
         personAddress: personAddressTable,
       });
 
       const query = createSelectQuery((ctx) => {
-        const isSamePerson = $col("person", "id").isEqualTo(
-          $col("personAddress", "personId")
+        const isSamePerson = col("person", "id").isEqualTo(
+          col("personAddress", "personId")
         );
 
-        const isFromSpain = $col("personAddress", "country").isEqualTo(
-          $val("Spain")
+        const isFromSpain = col("personAddress", "country").isEqualTo(
+          val("Spain")
         );
 
-        const isFromBrazilOrSpain = $col("personAddress", "country")
-          .isEqualTo($val("Brazil"))
+        const isFromBrazilOrSpain = col("personAddress", "country")
+          .isEqualTo(val("Brazil"))
           .or(isFromSpain);
 
+        // const joinCondition = and(
+        //   eq(col("person", "id"), col("personAddress", "personId")),
+        //   or(
+        //     col("personAddress", "country").isEqualTo(val("Brazil")),
+        //     col("personAddress", "country").isEqualTo(val("Spain"))
+        //   )
+        // );
+
         ctx
-          .select($col("person", "id"), $col("personAddress", "city"))
+          .select(col("person", "id"), col("personAddress", "city"))
           .from("person")
           .join("personAddress", isSamePerson.and(isFromBrazilOrSpain));
       });
@@ -276,22 +284,22 @@ describe("Select Query", () => {
 
     test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk AND NOT t2.col = value", () => {
       // SELECT id, country FROM person JOIN personAddress ON id = personId AND NOT country = 'France'
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col, val } = createQueryContext({
         person: personTable,
         personAddress: personAddressTable,
       });
 
       const query = createSelectQuery((ctx) => {
-        const isSamePerson = $col("person", "id").isEqualTo(
-          $col("personAddress", "personId")
+        const isSamePerson = col("person", "id").isEqualTo(
+          col("personAddress", "personId")
         );
 
-        const isNotFromFrance = $col("personAddress", "country")
-          .isEqualTo($val("France"))
+        const isNotFromFrance = col("personAddress", "country")
+          .isEqualTo(val("France"))
           .not();
 
         ctx
-          .select($col("person", "id"), $col("personAddress", "country"))
+          .select(col("person", "id"), col("personAddress", "country"))
           .from("person")
           .join("personAddress", isSamePerson.and(isNotFromFrance));
       });
@@ -328,21 +336,21 @@ describe("Select Query", () => {
 
     test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk AND t2.col <> value", () => {
       // SELECT id, country FROM person JOIN personAddress ON id = personId AND country <> 'France'
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col, val } = createQueryContext({
         person: personTable,
         personAddress: personAddressTable,
       });
       const query = createSelectQuery((ctx) => {
-        const isSamePerson = $col("person", "id").isEqualTo(
-          $col("personAddress", "personId")
+        const isSamePerson = col("person", "id").isEqualTo(
+          col("personAddress", "personId")
         );
 
-        const isNotFromFrance = $col("personAddress", "country").isNotEqualTo(
-          $val("France")
+        const isNotFromFrance = col("personAddress", "country").isNotEqualTo(
+          val("France")
         );
 
         ctx
-          .select($col("person", "id"), $col("personAddress", "country"))
+          .select(col("person", "id"), col("personAddress", "country"))
           .from("person")
           .join("personAddress", isSamePerson.and(isNotFromFrance));
       });
@@ -376,19 +384,19 @@ describe("Select Query", () => {
 
     test("SELECT ... FROM t1 RIGHT JOIN t2 ON t1.colPk = t2.colFk WHERE t1.colPk IS NULL", () => {
       // SELECT country FROM person RIGHT JOIN personAddress ON id = personId WHERE id IS NULL
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col } = createQueryContext({
         person: personTable,
         personAddress: personAddressTable,
       });
 
       const query = createSelectQuery((ctx) => {
-        const personId = $col("person", "id");
+        const personId = col("person", "id");
         const isSamePerson = personId.isEqualTo(
-          $col("personAddress", "personId")
+          col("personAddress", "personId")
         );
 
         ctx
-          .select($col("personAddress", "country"))
+          .select(col("personAddress", "country"))
           .from("person")
           .rightJoin("personAddress", isSamePerson)
           .where(personId.isNull());
@@ -417,23 +425,25 @@ describe("Select Query", () => {
 
     test("SELECT ... FROM t1 LEFT JOIN t2 ON t1.colPk = t2.colFk WHERE t2.colPk IS NULL", () => {
       // SELECT name FROM person LEFT JOIN personAddress ON id = personId WHERE personId IS NULL
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col } = createQueryContext({
         person: personTable,
         personAddress: personAddressTable,
       });
 
       const query = createSelectQuery((ctx) => {
-        const [personPersonId, personAddressPersonId] = [
-          $col("person", "id"),
-          $col("personAddress", "personId"),
-        ];
-        const isSamePerson = personPersonId.isEqualTo(personAddressPersonId);
+        const isSamePerson = col("person", "id").isEqualTo(
+          col("personAddress", "personId")
+        );
+        // const isSamePerson = eq(
+        //   col("person", "id"),
+        //   col("personAddress", "personId")
+        // );
 
         ctx
-          .select($col("person", "name"))
+          .select(col("person", "name"))
           .from("person")
           .leftJoin("personAddress", isSamePerson)
-          .where(personAddressPersonId.isNull());
+          .where(col("personAddress", "personId").isNull());
       });
 
       expect(query).toMatchObject({
@@ -461,12 +471,12 @@ describe("Select Query", () => {
   describe("Count function", () => {
     test("SELECT COUNT(1) FROM t1", () => {
       // SELECT COUNT(1) FROM person
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, val } = createQueryContext({
         person: personTable,
       });
 
       const query = createSelectQuery((ctx) =>
-        ctx.select(ctx.count($val(1))).from("person")
+        ctx.select(ctx.count(val(1))).from("person")
       );
 
       expect(query).toMatchObject({
@@ -484,11 +494,11 @@ describe("Select Query", () => {
 
     test("SELECT COUNT(DISTINCT t1.col) FROM t1", () => {
       // SELECT COUNT(DISTINCT name) FROM person
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col } = createQueryContext({
         person: personTable,
       });
       const query = createSelectQuery((ctx) =>
-        ctx.select(ctx.countDistinct($col("person", "name"))).from("person")
+        ctx.select(ctx.countDistinct(col("person", "name"))).from("person")
       );
 
       expect(query).toMatchObject({
@@ -509,15 +519,15 @@ describe("Select Query", () => {
   describe("Distinct select mode", () => {
     test("SELECT DISTINCT ... FROM t1 WHERE t1.col <> value", () => {
       // SELECT DISTINCT city FROM personAddress WHERE country <> 'Mexico'
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col, val } = createQueryContext({
         personAddress: personAddressTable,
       });
 
       const query = createSelectQuery((ctx) =>
         ctx
-          .selectDistinct($col("personAddress", "city"))
+          .selectDistinct(col("personAddress", "city"))
           .from("personAddress")
-          .where($col("personAddress", "country").isNotEqualTo($val("Mexico")))
+          .where(col("personAddress", "country").isNotEqualTo(val("Mexico")))
       );
 
       expect(query).toMatchObject({
@@ -536,20 +546,20 @@ describe("Select Query", () => {
   describe("Order by clause", () => {
     test("SELECT ... FROM t1 WHERE t1.col1 LIKE pattern ORDER BY t1.col2", () => {
       // SELECT ProductID, Name FROM Production.Product WHERE Name LIKE 'Lock Washer%' ORDER BY ProductID
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col, val } = createQueryContext({
         pr: productTable,
       });
 
       const query = createSelectQuery((ctx) => {
         const [productId, productName] = [
-          $col("pr", "ProductID"),
-          $col("pr", "Name"),
+          col("pr", "ProductID"),
+          col("pr", "Name"),
         ];
 
         ctx
           .select(productId, productName)
           .from("pr")
-          .where(productName.isLike($val("Lock Washer%")))
+          .where(productName.isLike(val("Lock Washer%")))
           .orderBy(productId.sortAscending());
       });
 
@@ -582,28 +592,28 @@ describe("Select Query", () => {
       //  FROM Orders o
       //  WHERE o.OrderDate = '2025-01-01'
       //);
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col, val } = createQueryContext({
         o: orderTable,
         e: employeeTable,
       });
 
       const subquery = createSelectQuery((ctx) => {
         const [employeeId, orderDate] = [
-          $col("o", "EmployeeID"),
-          $col("o", "OrderDate"),
+          col("o", "EmployeeID"),
+          col("o", "OrderDate"),
         ];
 
         ctx
           .select(employeeId)
           .from("o")
-          .where(orderDate.isEqualTo($val("2025-01-01")));
+          .where(orderDate.isEqualTo(val("2025-01-01")));
       });
 
       const outerQuery = createSelectQuery((ctx) => {
         const [employeeId, firstName, lastName] = [
-          $col("e", "EmployeeID"),
-          $col("e", "FirstName"),
-          $col("e", "LastName"),
+          col("e", "EmployeeID"),
+          col("e", "FirstName"),
+          col("e", "LastName"),
         ];
 
         ctx
@@ -644,32 +654,32 @@ describe("Select Query", () => {
       //  WHERE o.EmployeeID = e.EmployeeID   -- relación con la fila externa
       //  AND o.OrderDate = '2025-01-01'
       // );
-      const { createSelectQuery, $col, $val } = createQueryContext({
+      const { createSelectQuery, col, val, and } = createQueryContext({
         o: orderTable,
         e: employeeTable,
       });
 
       const subquery = createSelectQuery((ctx) => {
-        const isSameEmployee = $col("o", "EmployeeID").isEqualTo(
-          $col("e", "EmployeeID")
+        const isSameEmployee = col("o", "EmployeeID").isEqualTo(
+          col("e", "EmployeeID")
         );
-        const isOnDate = $col("o", "OrderDate").isEqualTo($val("2025-01-01"));
+        const isOnDate = col("o", "OrderDate").isEqualTo(val("2025-01-01"));
 
         ctx
-          .select($col("o", "EmployeeID"))
+          .select(col("o", "EmployeeID"))
           .from("o")
-          .where(isSameEmployee.and(isOnDate));
+          .where(and(isSameEmployee, isOnDate));
       });
 
       const query = createSelectQuery((ctx) => {
         ctx
           .select(
-            $col("e", "EmployeeID"),
-            $col("e", "FirstName"),
-            $col("e", "LastName")
+            col("e", "EmployeeID"),
+            col("e", "FirstName"),
+            col("e", "LastName")
           )
           .from("e")
-          .where($col("e", "EmployeeID").isInSubquery(subquery));
+          .where(col("e", "EmployeeID").isInSubquery(subquery));
       });
 
       expect(query).toMatchObject({
