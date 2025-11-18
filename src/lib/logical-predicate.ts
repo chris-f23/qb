@@ -1,3 +1,27 @@
+export const createParenthesizedPredicate = (
+  predicate: IPredicate
+): IParenthesizedPredicate => {
+  return {
+    predicate: predicate,
+    operator: "PARENTHESIS",
+    build() {
+      return `(${this.predicate.build()})`;
+    },
+    and(other) {
+      return createAndPredicate(this, other);
+    },
+    or(other) {
+      return createOrPredicate(this, other);
+    },
+    not() {
+      return createNegatedPredicate(this);
+    },
+    parenthesize() {
+      return createParenthesizedPredicate(this);
+    },
+  };
+};
+
 export const createAndPredicate = (
   left: IPredicate,
   right: IPredicate
@@ -8,6 +32,18 @@ export const createAndPredicate = (
     right: right,
     build() {
       return `${this.left.build()} AND ${this.right.build()}`;
+    },
+    and(other) {
+      return createAndPredicate(this, other);
+    },
+    or(other) {
+      return createOrPredicate(this, other);
+    },
+    not() {
+      return createNegatedPredicate(this);
+    },
+    parenthesize() {
+      return createParenthesizedPredicate(this);
     },
   };
 };
@@ -21,7 +57,19 @@ export const createOrPredicate = (
     operator: "OR",
     right: right,
     build() {
-      return `(${this.left.build()} OR ${this.right.build()})`;
+      return `${this.left.build()} OR ${this.right.build()}`;
+    },
+    and(other) {
+      return createAndPredicate(this, other);
+    },
+    or(other) {
+      return createOrPredicate(this, other);
+    },
+    not() {
+      return createNegatedPredicate(this);
+    },
+    parenthesize() {
+      return createParenthesizedPredicate(this);
     },
   };
 };
@@ -34,6 +82,18 @@ export const createNegatedPredicate = (
     operator: "NOT",
     build() {
       return `NOT ${this.predicate.build()}`;
+    },
+    and(other) {
+      return createAndPredicate(this, other);
+    },
+    or(other) {
+      return createOrPredicate(this, other);
+    },
+    not() {
+      return createNegatedPredicate(this);
+    },
+    parenthesize() {
+      return createParenthesizedPredicate(this);
     },
   };
 };
@@ -55,6 +115,18 @@ export const createBetweenPredicate = (
         this.isNegated ? "NOT " : ""
       }BETWEEN ${this.begin.build()} AND ${this.end.build()}`;
     },
+    and(other) {
+      return createAndPredicate(this, other);
+    },
+    or(other) {
+      return createOrPredicate(this, other);
+    },
+    not() {
+      return createNegatedPredicate(this);
+    },
+    parenthesize() {
+      return createParenthesizedPredicate(this);
+    },
   };
 };
 
@@ -72,6 +144,18 @@ export const createInExpressionListPredicate = (
       return `${this.left.build()} ${
         this.isNegated ? "NOT " : ""
       }IN (${this.expressionList.map((e) => e.build()).join(", ")})`;
+    },
+    and(other) {
+      return createAndPredicate(this, other);
+    },
+    or(other) {
+      return createOrPredicate(this, other);
+    },
+    not() {
+      return createNegatedPredicate(this);
+    },
+    parenthesize() {
+      return createParenthesizedPredicate(this);
     },
   };
 };
@@ -91,6 +175,18 @@ export const createInSubqueryPredicate = (
         this.isNegated ? "NOT " : ""
       }IN (${this.subquery.build()})`;
     },
+    and(other) {
+      return createAndPredicate(this, other);
+    },
+    or(other) {
+      return createOrPredicate(this, other);
+    },
+    not() {
+      return createNegatedPredicate(this);
+    },
+    parenthesize() {
+      return createParenthesizedPredicate(this);
+    },
   };
 };
 
@@ -108,6 +204,18 @@ export const createLikePredicate = (
       return `${this.left.build()} ${
         this.isNegated ? "NOT " : ""
       }LIKE ${this.pattern.build()}`;
+    },
+    and(other) {
+      return createAndPredicate(this, other);
+    },
+    or(other) {
+      return createOrPredicate(this, other);
+    },
+    not() {
+      return createNegatedPredicate(this);
+    },
+    parenthesize() {
+      return createParenthesizedPredicate(this);
     },
   };
 };

@@ -147,15 +147,8 @@ describe("SELECT FROM JOIN", () => {
 
       const isFromBrazilOrSpain = col("personAddress", "Country")
         .isEqualTo(val("Brazil"))
-        .or(isFromSpain);
-
-      // const joinCondition = and(
-      //   eq(col("person", "Id"), col("personAddress", "PersonId")),
-      //   or(
-      //     col("personAddress", "Country").isEqualTo(val("Brazil")),
-      //     col("personAddress", "Country").isEqualTo(val("Spain"))
-      //   )
-      // );
+        .or(isFromSpain)
+        .parenthesize();
 
       ctx
         .select(col("person", "Id"), col("personAddress", "City"))
@@ -180,17 +173,20 @@ describe("SELECT FROM JOIN", () => {
             },
             operator: "AND",
             right: {
-              left: {
-                left: { table: "personAddress", column: "Country" },
-                operator: "=",
-                right: { value: "Brazil" },
+              predicate: {
+                left: {
+                  left: { table: "personAddress", column: "Country" },
+                  operator: "=",
+                  right: { value: "Brazil" },
+                },
+                operator: "OR",
+                right: {
+                  left: { table: "personAddress", column: "Country" },
+                  operator: "=",
+                  right: { value: "Spain" },
+                },
               },
-              operator: "OR",
-              right: {
-                left: { table: "personAddress", column: "Country" },
-                operator: "=",
-                right: { value: "Spain" },
-              },
+              operator: "PARENTHESIS",
             },
           },
         },

@@ -76,9 +76,16 @@ type ISelectableReference = {
 /** Predicado que puede ser negado, o envuelto en paréntesis */
 type IPredicate = {
   operator: string;
-  isWrapped?: boolean;
   isNegated?: boolean;
   build(): string;
+  and(other: IPredicate): IAndPredicate;
+  or(other: IPredicate): IOrPredicate;
+  not(): INegatedPredicate;
+  parenthesize(): IParenthesizedPredicate;
+};
+
+type IParenthesizedPredicate = IPredicate & {
+  predicate: IPredicate;
 };
 
 type ILikePredicate = IPredicate & {
@@ -275,9 +282,18 @@ type IQueryContext<TTables extends Record<string, IQueryableTable>> = {
    */
   not(predicate: IPredicate): INegatedPredicate;
 
-  concat(...values: IReference[]): IConcatReference;
+  /**
+   * Wraps the given predicate in parentheses.
+   *
+   * Compiles to `([predicate])`
+   */
+  parenthesize(predicate: IPredicate): IParenthesizedPredicate;
 
-  concat_ws(separator: IReference, ...values: IReference[]): IConcatReference;
+  fn: {
+    concat(...values: IReference[]): IConcatReference;
+
+    concat_ws(separator: IReference, ...values: IReference[]): IConcatReference;
+  };
 };
 
 type ISelectQueryContext<TTables extends Record<string, IQueryableTable>> = {

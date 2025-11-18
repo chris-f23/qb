@@ -61,6 +61,10 @@ export const createQueryContext = <
       return createNegatedPredicate(predicate);
     },
 
+    parenthesize(predicate) {
+      return predicate.parenthesize();
+    },
+
     createColumnReference(table, column) {
       return createColumnReference(table, column);
     },
@@ -77,12 +81,14 @@ export const createQueryContext = <
       return createLiteralReference(value);
     },
 
-    concat(...values) {
-      return createConcatReference(values);
-    },
+    fn: {
+      concat(...values) {
+        return createConcatReference(values);
+      },
 
-    concat_ws(separator, ...values) {
-      return createConcatWithSeparatorReference(separator, values);
+      concat_ws(separator, ...values) {
+        return createConcatWithSeparatorReference(separator, values);
+      },
     },
   };
 };

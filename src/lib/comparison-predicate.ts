@@ -2,6 +2,7 @@ import {
   createAndPredicate,
   createNegatedPredicate,
   createOrPredicate,
+  createParenthesizedPredicate,
 } from "./logical-predicate";
 
 export const createComparisonPredicate = (
@@ -32,6 +33,9 @@ export const createComparisonPredicate = (
 
     not(): INegatedPredicate {
       return createNegatedPredicate(this);
+    },
+    parenthesize() {
+      return createParenthesizedPredicate(this);
     },
   };
 };
