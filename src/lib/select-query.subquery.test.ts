@@ -72,6 +72,14 @@ describe("Subquery", () => {
         },
       },
     });
+    expect(outerQuery.build()).toBe(
+      "SELECT [e].[EmployeeID], [e].[FirstName], [e].[LastName] " +
+        "FROM [Employees] AS [e] " +
+        "WHERE [e].[EmployeeID] IN " +
+        "(SELECT [o].[EmployeeID] " +
+        "FROM [Orders] AS [o] " +
+        "WHERE [o].[OrderDate] = '2025-01-01')"
+    );
   });
 
   test("SELECT ... FROM t1 WHERE t1.col1 IN (SELECT t2.col1 FROM t2 WHERE t2.col2 = value AND t2.col3 = t1.col2)", () => {
@@ -140,5 +148,15 @@ describe("Subquery", () => {
         },
       },
     });
+
+    expect(query.build()).toBe(
+      "SELECT [e].[EmployeeID], [e].[FirstName], [e].[LastName] " +
+        "FROM [Employees] AS [e] " +
+        "WHERE [e].[EmployeeID] IN " +
+        "(SELECT [o].[EmployeeID] " +
+        "FROM [Orders] AS [o] " +
+        "WHERE [o].[EmployeeID] = [e].[EmployeeID] " +
+        "AND [o].[OrderDate] = '2025-01-01')"
+    );
   });
 });

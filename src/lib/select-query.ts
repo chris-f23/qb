@@ -92,26 +92,31 @@ const createSelectQueryContext = <
         orderByList: orderByList,
         involvedTables: tables,
         build() {
-          let selection = `SELECT ${selectMode ?? ""}`;
+          let selection = "SELECT ";
+
+          selection += selectMode ? `${selectMode} ` : "";
+
           if (selectList.length > 0) {
             selection += selectList.map((ref) => ref.build()).join(", ");
           }
 
           let source = "";
           if (this.mainTable) {
-            source += `FROM ${
-              this.involvedTables[this.mainTable].name
-            } AS ${this.mainTable.toString()}`;
+            source += `FROM ${this.involvedTables[
+              this.mainTable
+            ].build()} AS [${this.mainTable.toString()}]`;
           }
 
           if (this.joinedTables && this.joinedTables.length > 0) {
             source += this.joinedTables
-              .map(
-                (jt) =>
-                  `${jt.type} JOIN ${
-                    this.involvedTables[jt.table]
-                  } AS ${jt.table.toString()} ON ${jt.predicate.build()}`
-              )
+              .map((jt) => {
+                const joinType = jt.type ? `${jt.type} JOIN` : "JOIN";
+                const joinTable = this.involvedTables[jt.table].build();
+                const joinTableAlias = jt.table.toString();
+                const joinPredicate = jt.predicate.build();
+
+                return ` ${joinType} ${joinTable} AS [${joinTableAlias}] ON ${joinPredicate}`;
+              })
               .join(" ");
           }
 
@@ -120,7 +125,14 @@ const createSelectQueryContext = <
             filter += `WHERE ${this.searchCondition.build()}`;
           }
 
-          return `${selection} ${source} ${filter}`;
+          let sorted = "";
+          if (this.orderByList && this.orderByList.length > 0) {
+            sorted = `ORDER BY ${this.orderByList
+              .map((ref) => ref.build())
+              .join(", ")}`;
+          }
+
+          return [selection, source, filter, sorted].join(" ").trim();
         },
       };
     },

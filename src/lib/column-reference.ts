@@ -15,7 +15,7 @@ export const createColumnReference = <TTable, TColumn>(
     table: table,
     column: column,
     build() {
-      return `${this.table}.${this.column}`;
+      return `[${this.table}].[${this.column}]`;
     },
     isEqualTo(other: IReference): IComparisonPredicate {
       return createComparisonPredicate(this, "=", other);

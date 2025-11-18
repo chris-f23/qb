@@ -45,5 +45,11 @@ describe("Order by clause", () => {
         { original: { table: "pr", column: "ProductID" }, order: "ASC" },
       ],
     });
+    expect(query.build()).toBe(
+      "SELECT [pr].[ProductID], [pr].[Name] " +
+        "FROM [Production].[Product] AS [pr] " +
+        "WHERE [pr].[Name] LIKE 'Lock Washer%' " +
+        "ORDER BY [pr].[ProductID] ASC"
+    );
   });
 });

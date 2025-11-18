@@ -2,20 +2,15 @@ import { describe, expect, test } from "@jest/globals";
 import { createQueryContext } from "./query-context";
 import { createQueryableTable } from "./queryable-table";
 
-const personTable = createQueryableTable({
-  name: "person",
-  columns: { id: "INT", name: "VARCHAR", age: "INT" },
-});
-
 const personAddressTable = createQueryableTable({
-  name: "personAddress",
-  schemaName: "dbo",
-  databaseName: "db",
+  name: "PersonAddress",
+  schemaName: "HR",
+  databaseName: "Main",
   columns: {
-    personId: "INT",
-    country: "VARCHAR",
-    city: "VARCHAR",
-    street: "VARCHAR",
+    PersonId: "INT",
+    Country: "VARCHAR",
+    City: "VARCHAR",
+    Street: "VARCHAR",
   },
 });
 
@@ -23,25 +18,28 @@ describe("SELECT DISTINCT", () => {
   test("SELECT DISTINCT ... FROM t1 WHERE t1.col <> value", () => {
     // SELECT DISTINCT city FROM personAddress WHERE country <> 'Mexico'
     const { createSelectQuery, col, val } = createQueryContext({
-      personAddress: personAddressTable,
+      pa: personAddressTable,
     });
 
     const query = createSelectQuery((ctx) =>
       ctx
-        .selectDistinct(col("personAddress", "city"))
-        .from("personAddress")
-        .where(col("personAddress", "country").isNotEqualTo(val("Mexico")))
+        .selectDistinct(col("pa", "City"))
+        .from("pa")
+        .where(col("pa", "Country").isNotEqualTo(val("Mexico")))
     );
 
     expect(query).toMatchObject({
       selectMode: "DISTINCT",
-      selectList: [{ table: "personAddress", column: "city" }],
-      mainTable: "personAddress",
+      selectList: [{ table: "pa", column: "City" }],
+      mainTable: "pa",
       searchCondition: {
-        left: { table: "personAddress", column: "country" },
+        left: { table: "pa", column: "Country" },
         operator: "<>",
         right: { value: "Mexico" },
       },
     });
+    expect(query.build()).toBe(
+      "SELECT DISTINCT [pa].[City] FROM [Main].[HR].[PersonAddress] AS [pa] WHERE [pa].[Country] <> 'Mexico'"
+    );
   });
 });

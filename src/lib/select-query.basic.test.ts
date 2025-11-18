@@ -4,6 +4,8 @@ import { createQueryableTable } from "./queryable-table";
 
 const personTable = createQueryableTable({
   name: "Person",
+  databaseName: "MainDB",
+  schemaName: "dbo",
   columns: { id: "INT", name: "VARCHAR", age: "INT" },
 });
 
@@ -31,8 +33,8 @@ describe("SELECT FROM WHERE", () => {
     // SELECT id FROM person
     const { createSelectQuery, col } = createQueryContext({
       person: personTable,
-      personAddress: personAddressTable,
     });
+
     const query = createSelectQuery((ctx) =>
       ctx.select(col("person", "id")).from("person")
     );
@@ -40,7 +42,9 @@ describe("SELECT FROM WHERE", () => {
       selectList: [{ table: "person", column: "id" }],
       mainTable: "person",
     });
-    expect(query.build()).toBe("SELECT id FROM person"); // WIP
+    expect(query.build()).toBe(
+      "SELECT [person].[id] FROM [MainDB].[dbo].[Person] AS [person]"
+    );
   });
 
   test("SELECT t1.col1, t1.col2 FROM t1", () => {
@@ -64,6 +68,10 @@ describe("SELECT FROM WHERE", () => {
       ],
       mainTable: "person",
     });
+
+    expect(query.build()).toBe(
+      "SELECT [person].[id], [person].[name] FROM [MainDB].[dbo].[Person] AS [person]"
+    );
   });
 
   test("SELECT ... FROM t1 WHERE t1.col = value", () => {
@@ -91,5 +99,9 @@ describe("SELECT FROM WHERE", () => {
         right: { value: 1 },
       },
     });
+
+    expect(query.build()).toBe(
+      "SELECT [person].[name] FROM [MainDB].[dbo].[Person] AS [person] WHERE [person].[id] = 1"
+    );
   });
 });

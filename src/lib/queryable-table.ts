@@ -15,4 +15,16 @@ export const createQueryableTable = <
   schemaName: schemaName,
   databaseName: databaseName,
   columns: columns,
+
+  build() {
+    if (schemaName && databaseName) {
+      return `[${databaseName}].[${schemaName}].[${name}]`;
+    } else if (schemaName) {
+      return `[${schemaName}].[${name}]`;
+    } else if (databaseName) {
+      return `[${databaseName}]..[${name}]`;
+    } else {
+      return `[${name}]`;
+    }
+  },
 });

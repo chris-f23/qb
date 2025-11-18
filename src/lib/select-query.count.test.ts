@@ -3,31 +3,20 @@ import { createQueryContext } from "./query-context";
 import { createQueryableTable } from "./queryable-table";
 
 const personTable = createQueryableTable({
-  name: "person",
+  name: "Person",
+  databaseName: "MainDB",
   columns: { id: "INT", name: "VARCHAR", age: "INT" },
-});
-
-const personAddressTable = createQueryableTable({
-  name: "personAddress",
-  schemaName: "dbo",
-  databaseName: "db",
-  columns: {
-    personId: "INT",
-    country: "VARCHAR",
-    city: "VARCHAR",
-    street: "VARCHAR",
-  },
 });
 
 describe("SELECT COUNT", () => {
   test("SELECT COUNT(1) FROM t1", () => {
     // SELECT COUNT(1) FROM person
     const { createSelectQuery, val } = createQueryContext({
-      person: personTable,
+      p: personTable,
     });
 
     const query = createSelectQuery((ctx) =>
-      ctx.select(ctx.count(val(1))).from("person")
+      ctx.select(ctx.count(val(1))).from("p")
     );
 
     expect(query).toMatchObject({
@@ -39,30 +28,36 @@ describe("SELECT COUNT", () => {
           asDistinct: false,
         },
       ],
-      mainTable: "person",
+      mainTable: "p",
     });
+    expect(query.build()).toBe(
+      "SELECT COUNT(1) FROM [MainDB]..[Person] AS [p]"
+    );
   });
 
   test("SELECT COUNT(DISTINCT t1.col) FROM t1", () => {
     // SELECT COUNT(DISTINCT name) FROM person
     const { createSelectQuery, col } = createQueryContext({
-      person: personTable,
+      per: personTable,
     });
     const query = createSelectQuery((ctx) =>
-      ctx.select(ctx.countDistinct(col("person", "name"))).from("person")
+      ctx.select(ctx.countDistinct(col("per", "name"))).from("per")
     );
 
     expect(query).toMatchObject({
       selectList: [
         {
           originalReference: {
-            table: "person",
+            table: "per",
             column: "name",
           },
           asDistinct: true,
         },
       ],
-      mainTable: "person",
+      mainTable: "per",
     });
+    expect(query.build()).toBe(
+      "SELECT COUNT(DISTINCT [per].[name]) FROM [MainDB]..[Person] AS [per]"
+    );
   });
 });

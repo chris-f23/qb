@@ -21,7 +21,7 @@ export const createOrPredicate = (
     operator: "OR",
     right: right,
     build() {
-      return `${this.left.build()} OR ${this.right.build()}`;
+      return `(${this.left.build()} OR ${this.right.build()})`;
     },
   };
 };

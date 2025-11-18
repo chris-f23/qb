@@ -7,11 +7,15 @@ type IQueryableTable<
   schemaName?: string;
   databaseName?: string;
   columns: UTableColumns;
+
+  build(): string;
 };
 
 type IOrderableReference = {
   original: IReference;
   order: "ASC" | "DESC";
+
+  build(): string;
 };
 
 type IConcatReference = {
@@ -289,7 +293,10 @@ type ISelectQueryContext<TTables extends Record<string, IQueryableTable>> = {
   from(table: keyof TTables): ISelectQueryContext<TTables>;
 
   /** JOIN ... ON ... */
-  join(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
+  join(
+    table: keyof TTables,
+    condition: IPredicate
+  ): ISelectQueryContext<TTables>;
 
   /** LEFT JOIN ... ON ... */
   leftJoin(table: string, condition: IPredicate): ISelectQueryContext<TTables>;
