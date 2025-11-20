@@ -15,8 +15,7 @@ const personAddressTable = createQueryableTable({
 });
 
 describe("SELECT DISTINCT", () => {
-  test("SELECT DISTINCT ... FROM t1 WHERE t1.col <> value", () => {
-    // SELECT DISTINCT city FROM personAddress WHERE country <> 'Mexico'
+  test("Select all distinct values of a column", () => {
     const { createSelectQuery, col, val } = createQueryContext({
       pa: personAddressTable,
     });

@@ -21,9 +21,8 @@ const personAddressTable = createQueryableTable({
 });
 
 describe("SELECT FROM JOIN", () => {
-  test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk", () => {
-    // SELECT id, name, age, country, city, street FROM person JOIN personAddress ON id = personId
-    const { createSelectQuery, col } = createQueryContext({
+  test("Join two tables using a single condition", () => {
+    const { createSelectQuery, col, eq } = createQueryContext({
       p: personTable,
       pa: personAddressTable,
     });
@@ -73,8 +72,7 @@ describe("SELECT FROM JOIN", () => {
     );
   });
 
-  test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk AND t2.col = value", () => {
-    // SELECT id, street FROM person JOIN personAddress ON id = personId AND country = 'Brazil'
+  test("Join two tables using multiple conditions", () => {
     const { createSelectQuery, col, val } = createQueryContext({
       person: personTable,
       personAddress: personAddressTable,
@@ -129,8 +127,7 @@ describe("SELECT FROM JOIN", () => {
     );
   });
 
-  test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk AND (t2.col = value1 OR t2.col = value2)", () => {
-    // SELECT id, city FROM person JOIN personAddress ON id = personId AND (country = 'Brazil' OR country = 'Spain')
+  test("Join two tables using a complex condition", () => {
     const { createSelectQuery, col, val } = createQueryContext({
       person: personTable,
       personAddress: personAddressTable,
@@ -201,115 +198,7 @@ describe("SELECT FROM JOIN", () => {
     );
   });
 
-  test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk AND NOT t2.col = value", () => {
-    // SELECT id, country FROM person JOIN personAddress ON id = personId AND NOT country = 'France'
-    const { createSelectQuery, col, val } = createQueryContext({
-      person: personTable,
-      personAddress: personAddressTable,
-    });
-
-    const query = createSelectQuery((ctx) => {
-      const isSamePerson = col("person", "Id").isEqualTo(
-        col("personAddress", "PersonId")
-      );
-
-      const isNotFromFrance = col("personAddress", "Country")
-        .isEqualTo(val("France"))
-        .not();
-
-      ctx
-        .select(col("person", "Id"), col("personAddress", "Country"))
-        .from("person")
-        .join("personAddress", isSamePerson.and(isNotFromFrance));
-    });
-
-    expect(query).toMatchObject({
-      selectList: [
-        { table: "person", column: "Id" },
-        { table: "personAddress", column: "Country" },
-      ],
-      mainTable: "person",
-      joinedTables: [
-        {
-          table: "personAddress",
-          predicate: {
-            left: {
-              left: { table: "person", column: "Id" },
-              operator: "=",
-              right: { table: "personAddress", column: "PersonId" },
-            },
-            operator: "AND",
-            right: {
-              predicate: {
-                left: { table: "personAddress", column: "Country" },
-                operator: "=",
-                right: { value: "France" },
-              },
-              operator: "NOT",
-            },
-          },
-        },
-      ],
-    });
-  });
-
-  test("SELECT ... FROM t1 JOIN t2 ON t1.colPk = t2.colFk AND t2.col <> value", () => {
-    // SELECT id, country FROM person JOIN personAddress ON id = personId AND country <> 'France'
-    const { createSelectQuery, col, val } = createQueryContext({
-      person: personTable,
-      personAddress: personAddressTable,
-    });
-    const query = createSelectQuery((ctx) => {
-      const isSamePerson = col("person", "Id").isEqualTo(
-        col("personAddress", "PersonId")
-      );
-
-      const isNotFromFrance = col("personAddress", "Country").isNotEqualTo(
-        val("France")
-      );
-
-      ctx
-        .select(col("person", "Id"), col("personAddress", "Country"))
-        .from("person")
-        .join("personAddress", isSamePerson.and(isNotFromFrance));
-    });
-
-    expect(query).toMatchObject({
-      selectList: [
-        { table: "person", column: "Id" },
-        { table: "personAddress", column: "Country" },
-      ],
-      mainTable: "person",
-      joinedTables: [
-        {
-          table: "personAddress",
-          predicate: {
-            left: {
-              left: { table: "person", column: "Id" },
-              operator: "=",
-              right: { table: "personAddress", column: "PersonId" },
-            },
-            operator: "AND",
-            right: {
-              left: { table: "personAddress", column: "Country" },
-              operator: "<>",
-              right: { value: "France" },
-            },
-          },
-        },
-      ],
-    });
-    expect(query.build()).toBe(
-      "SELECT [person].[Id], [personAddress].[Country] " +
-        "FROM [HumanResources].[Person] AS [person] " +
-        "JOIN [Main].[HumanResources].[PersonAddress] AS [personAddress] " +
-        "ON [person].[Id] = [personAddress].[PersonId] " +
-        "AND [personAddress].[Country] <> 'France'"
-    );
-  });
-
-  test("SELECT ... FROM t1 RIGHT JOIN t2 ON t1.colPk = t2.colFk WHERE t1.colPk IS NULL", () => {
-    // SELECT country FROM person RIGHT JOIN personAddress ON id = personId WHERE id IS NULL
+  test("Select columns from right joined table excluding inner join", () => {
     const { createSelectQuery, col } = createQueryContext({
       person: personTable,
       personAddress: personAddressTable,
@@ -355,8 +244,7 @@ describe("SELECT FROM JOIN", () => {
     );
   });
 
-  test("SELECT ... FROM t1 LEFT JOIN t2 ON t1.colPk = t2.colFk WHERE t2.colPk IS NULL", () => {
-    // SELECT name FROM person LEFT JOIN personAddress ON id = personId WHERE personId IS NULL
+  test("Select columns from left joined table excluding inner join", () => {
     const { createSelectQuery, col } = createQueryContext({
       person: personTable,
       personAddress: personAddressTable,

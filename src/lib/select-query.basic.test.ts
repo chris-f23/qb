@@ -22,15 +22,13 @@ const personAddressTable = createQueryableTable({
 });
 
 describe("SELECT FROM WHERE", () => {
-  test("SELECT literal", () => {
-    // SELECT 1;
+  test("Select a literal reference", () => {
     const { createSelectQuery, val } = createQueryContext({});
     const query = createSelectQuery((ctx) => ctx.select(val(1)));
     expect(query).toMatchObject({ selectList: [{ value: 1 }] });
   });
 
-  test("SELECT t1.col1 FROM t1", () => {
-    // SELECT id FROM person
+  test("Select a column reference", () => {
     const { createSelectQuery, col } = createQueryContext({
       person: personTable,
     });
@@ -47,8 +45,7 @@ describe("SELECT FROM WHERE", () => {
     );
   });
 
-  test("SELECT t1.col1, t1.col2 FROM t1", () => {
-    // SELECT name, id FROM person
+  test("Select multiple column references", () => {
     const { createSelectQuery, col } = createQueryContext({
       person: personTable,
     });
@@ -74,8 +71,7 @@ describe("SELECT FROM WHERE", () => {
     );
   });
 
-  test("SELECT ... FROM t1 WHERE t1.col = value", () => {
-    //SELECT name FROM person WHERE id = 1
+  test("Select using a search condition", () => {
     const { createSelectQuery, col, val } = createQueryContext({
       person: personTable,
     });

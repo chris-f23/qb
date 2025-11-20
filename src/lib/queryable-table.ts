@@ -1,5 +1,5 @@
 export const createQueryableTable = <
-  TColumns extends Record<string, ITableColumnDataType>
+  const TColumns extends Record<string, ITableColumnDataType>
 >({
   name,
   schemaName,

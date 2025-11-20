@@ -9,8 +9,7 @@ const personTable = createQueryableTable({
 });
 
 describe("SELECT COUNT", () => {
-  test("SELECT COUNT(1) FROM t1", () => {
-    // SELECT COUNT(1) FROM person
+  test("Select total number of rows in table", () => {
     const { createSelectQuery, val } = createQueryContext({
       p: personTable,
     });
@@ -35,8 +34,7 @@ describe("SELECT COUNT", () => {
     );
   });
 
-  test("SELECT COUNT(DISTINCT t1.col) FROM t1", () => {
-    // SELECT COUNT(DISTINCT name) FROM person
+  test("Select total number of distinct values of a column", () => {
     const { createSelectQuery, col } = createQueryContext({
       per: personTable,
     });

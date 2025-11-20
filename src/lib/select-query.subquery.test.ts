@@ -12,15 +12,8 @@ const orderTable = createQueryableTable({
   columns: { EmployeeID: "INT", OrderDate: "DATETIME" },
 });
 
-describe("Subquery", () => {
-  test("SELECT ... FROM t1 WHERE t1.col1 IN (SELECT t2.col1 FROM t2 WHERE t2.col2 = value)", () => {
-    // SELECT e.EmployeeID, e.FirstName, e.LastName
-    // FROM Employees e
-    // WHERE e.EmployeeID IN (
-    //  SELECT o.EmployeeID
-    //  FROM Orders o
-    //  WHERE o.OrderDate = '2025-01-01'
-    //);
+describe("SUBQUERY", () => {
+  test("Select using a subquery as search condition", () => {
     const { createSelectQuery, col, val } = createQueryContext({
       o: orderTable,
       e: employeeTable,
@@ -82,15 +75,7 @@ describe("Subquery", () => {
     );
   });
 
-  test("SELECT ... FROM t1 WHERE t1.col1 IN (SELECT t2.col1 FROM t2 WHERE t2.col2 = value AND t2.col3 = t1.col2)", () => {
-    // SELECT e.EmployeeID, e.FirstName, e.LastName
-    // FROM Employees e
-    // WHERE e.EmployeeID IN (
-    //  SELECT o.EmployeeID
-    //  FROM Orders o
-    //  WHERE o.EmployeeID = e.EmployeeID   -- relación con la fila externa
-    //  AND o.OrderDate = '2025-01-01'
-    // );
+  test("Select using a correlated subquery as search condition", () => {
     const { createSelectQuery, col, val, and } = createQueryContext({
       o: orderTable,
       e: employeeTable,

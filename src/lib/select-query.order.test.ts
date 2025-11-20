@@ -8,9 +8,8 @@ const productTable = createQueryableTable({
   columns: { ProductID: "INT", Name: "VARCHAR" },
 });
 
-describe("Order by clause", () => {
-  test("SELECT ... FROM t1 WHERE t1.col1 LIKE pattern ORDER BY t1.col2", () => {
-    // SELECT ProductID, Name FROM Production.Product WHERE Name LIKE 'Lock Washer%' ORDER BY ProductID
+describe("ORDER BY", () => {
+  test("Select and order by a column in ascending order", () => {
     const { createSelectQuery, col, val } = createQueryContext({
       pr: productTable,
     });
@@ -50,6 +49,49 @@ describe("Order by clause", () => {
         "FROM [Production].[Product] AS [pr] " +
         "WHERE [pr].[Name] LIKE 'Lock Washer%' " +
         "ORDER BY [pr].[ProductID] ASC"
+    );
+  });
+
+  test("Select and order by a column in descending order", () => {
+    const { createSelectQuery, col, val } = createQueryContext({
+      pr: productTable,
+    });
+
+    const query = createSelectQuery((ctx) => {
+      const [productId, productName] = [
+        col("pr", "ProductID"),
+        col("pr", "Name"),
+      ];
+
+      ctx
+        .select(productId, productName)
+        .from("pr")
+        .where(productName.isLike(val("Lock Washer%")))
+        .orderBy(productId.sortDescending());
+    });
+
+    expect(query).toMatchObject({
+      selectList: [
+        { table: "pr", column: "ProductID" },
+        { table: "pr", column: "Name" },
+      ],
+      mainTable: "pr",
+      searchCondition: {
+        left: { table: "pr", column: "Name" },
+        operator: "LIKE",
+        pattern: {
+          value: "Lock Washer%",
+        },
+      },
+      orderByList: [
+        { original: { table: "pr", column: "ProductID" }, order: "DESC" },
+      ],
+    });
+    expect(query.build()).toBe(
+      "SELECT [pr].[ProductID], [pr].[Name] " +
+        "FROM [Production].[Product] AS [pr] " +
+        "WHERE [pr].[Name] LIKE 'Lock Washer%' " +
+        "ORDER BY [pr].[ProductID] DESC"
     );
   });
 });
